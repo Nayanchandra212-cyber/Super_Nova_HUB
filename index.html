@@ -1,0 +1,3144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>SUPERNOVA HUB | Tactical Cybernetic Arcade Suite</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            rajdhani: ['Rajdhani', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            spaceVoid: '#04060c',
+            spaceCard: '#0a0e1a',
+            spacePanel: '#101526',
+            novaCyan: '#00f2fe',
+            novaViolet: '#9d4edd',
+            novaNeon: '#00ff88',
+            novaPink: '#ff007f',
+            novaAmber: '#ffaa00',
+            novaDanger: '#ef4444',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      box-sizing: border-box;
+    }
+    body {
+      background: radial-gradient(circle at 50% 0%, #15162c 0%, #080a14 55%, #030408 100%);
+      font-family: 'Rajdhani', sans-serif;
+      touch-action: manipulation;
+      min-height: 100vh;
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+    .nova-glow {
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.16);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+    }
+    .nova-glow:hover {
+      box-shadow: 0 0 32px rgba(0, 242, 254, 0.45);
+      border-color: rgba(0, 242, 254, 0.85);
+    }
+    .cyber-panel {
+      background: rgba(10, 14, 26, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .arcade-btn {
+      transition: transform 0.08s ease, filter 0.12s ease, background-color 0.12s ease;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+    .arcade-btn:active {
+      transform: scale(0.96) translateZ(0);
+      filter: brightness(1.2);
+    }
+    .turn-locked-shield {
+      pointer-events: none !important;
+      cursor: not-allowed !important;
+      opacity: 0.85;
+    }
+    @keyframes discFallBounce {
+      0% {
+        transform: translateY(var(--fall-distance, -360px)) scale(0.92, 1.12);
+        animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+      }
+      75% {
+        transform: translateY(0px) scale(1.15, 0.86);
+        animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+      }
+      88% {
+        transform: translateY(-18px) scale(0.96, 1.04);
+      }
+      100% {
+        transform: translateY(0px) scale(1, 1);
+      }
+    }
+    .anim-disc-fall {
+      animation-name: discFallBounce;
+      animation-fill-mode: forwards;
+    }
+    @keyframes drawLaserLine {
+      from { stroke-dashoffset: 120; }
+      to { stroke-dashoffset: 0; }
+    }
+    .laser-stroke {
+      stroke-dasharray: 120;
+      animation: drawLaserLine 0.28s ease-out forwards;
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-ring { animation: pulseRing 2s infinite ease-in-out; }
+    @keyframes redAlertPulse {
+      0%, 100% { box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.3); }
+      50% { box-shadow: inset 0 0 60px rgba(239, 68, 68, 0.85); }
+    }
+    .red-alert { animation: redAlertPulse 0.8s infinite ease-in-out; }
+    kbd {
+      font-family: 'JetBrains Mono', monospace;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.15rem 0.45rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #00f2fe;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      border-radius: 0.35rem;
+      box-shadow: 0 2px 0 rgba(0, 242, 254, 0.25);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #04060c; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00f2fe; }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between">
+
+  <!-- SVG Global Symbol Library -->
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <g id="icon-gamepad">
+        <path fill="currentColor" d="M19.5 6H4.5A3.5 3.5 0 0 0 1 9.5v5A3.5 3.5 0 0 0 4.5 18h15a3.5 3.5 0 0 0 3.5-3.5v-5A3.5 3.5 0 0 0 19.5 6zm-11 7h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a1 1 0 1 1 2 0v1h1a1 1 0 1 1 0 2zm7.5 1a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm2.5-2.5a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/>
+      </g>
+      <g id="icon-phantom">
+        <path fill="currentColor" d="M12 2a8 8 0 0 0-8 8v9.5a1.5 1.5 0 0 0 2.5 1.1l2-1.7 2 1.7a1.5 1.5 0 0 0 2 0l2-1.7 2 1.7a1.5 1.5 0 0 0 2.5-1.1V10a8 8 0 0 0-8-8zm-3 8a1.75 1.75 0 1 1 0-3.5 1.75 1.75 0 0 1 0 3.5zm6 0a1.75 1.75 0 1 1 0-3.5 1.75 1.75 0 0 1 0 3.5z"/>
+      </g>
+      <g id="icon-chess">
+        <path fill="currentColor" d="M19 18H5v2h14v-2zm-3-14a5 5 0 0 0-4.8 3.6A3.5 3.5 0 0 0 7 10.5V11l2 1v2l-3 1v2h12v-3.5c0-2-1.5-3.5-3-4.5l1.5-3.5c.3-.7-.2-1.5-1-1.5H16zm-5 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
+      </g>
+      <g id="icon-connect4">
+        <rect x="2" y="3" width="20" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="7" cy="8" r="2" fill="currentColor"/>
+        <circle cx="12" cy="8" r="2" fill="currentColor"/>
+        <circle cx="17" cy="8" r="2" fill="currentColor"/>
+        <circle cx="7" cy="14" r="2" fill="currentColor"/>
+        <circle cx="12" cy="14" r="2" fill="currentColor"/>
+        <circle cx="17" cy="14" r="2" fill="currentColor"/>
+      </g>
+      <g id="icon-puck">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4" fill="currentColor"/>
+        <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g id="icon-ttt">
+        <path d="M4 9h16M4 15h16M9 4v16M15 4v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g id="icon-tank">
+        <rect x="4" y="9" width="16" height="8" rx="2" fill="currentColor"/>
+        <rect x="8" y="6" width="8" height="5" rx="1.5" fill="currentColor"/>
+        <line x1="12" y1="6" x2="12" y2="2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="6" cy="17.5" r="1.5" fill="#04060c"/>
+        <circle cx="10" cy="17.5" r="1.5" fill="#04060c"/>
+        <circle cx="14" cy="17.5" r="1.5" fill="#04060c"/>
+        <circle cx="18" cy="17.5" r="1.5" fill="#04060c"/>
+      </g>
+      <g id="icon-dots">
+        <circle cx="6" cy="6" r="2" fill="currentColor"/>
+        <circle cx="18" cy="6" r="2" fill="currentColor"/>
+        <circle cx="6" cy="18" r="2" fill="currentColor"/>
+        <circle cx="18" cy="18" r="2" fill="currentColor"/>
+        <line x1="6" y1="6" x2="18" y2="6" stroke="currentColor" stroke-width="2"/>
+        <line x1="6" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+      </g>
+      <g id="icon-bolt">
+        <path fill="currentColor" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </g>
+      <g id="icon-echo">
+        <rect x="3" y="4" width="18" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g id="icon-snake">
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 16v-6a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/>
+        <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
+      </g>
+      <g id="icon-pulse">
+        <polygon points="12,2 20,22 4,22" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="16" r="2" fill="currentColor"/>
+      </g>
+      <g id="icon-info">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <line x1="12" y1="8" x2="12" y2="8.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="11.5" x2="12" y2="16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g id="icon-expand">
+        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+      </g>
+      <g id="icon-compress">
+        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M4 14h6v6M20 10h-6V4M10 14L3 21M21 3l-7 7"/>
+      </g>
+      <g id="icon-audio-on">
+        <path fill="currentColor" d="M14 3.23v17.54a1 1 0 0 1-1.6.8L6.7 16H3a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h3.7l5.7-5.57a1 1 0 0 1 1.6.8zM18.5 7.5a1 1 0 0 1 1.4 0 6.5 6.5 0 0 1 0 9a1 1 0 1 1-1.4-1.4 4.5 4.5 0 0 0 0-6.2 1 1 0 0 1 0-1.4z"/>
+      </g>
+      <g id="icon-audio-mute">
+        <path fill="currentColor" d="M14 3.23v17.54a1 1 0 0 1-1.6.8L6.7 16H3a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h3.7l5.7-5.57a1 1 0 0 1 1.6.8zM21.7 8.3a1 1 0 0 0-1.4 0l-2.3 2.3-2.3-2.3a1 1 0 0 0 0-1.4z"/>
+      </g>
+      <g id="icon-bot">
+        <rect x="4" y="6" width="16" height="12" rx="3" fill="currentColor"/>
+        <circle cx="8.5" cy="11.5" r="1.5" fill="#04060c"/>
+        <circle cx="15.5" cy="11.5" r="1.5" fill="#04060c"/>
+        <path d="M12 2v4M2 12h2M20 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g id="icon-users">
+        <path fill="currentColor" d="M9 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm6 2a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm-6 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5zm6 0c-.4 0-.9 0-1.3.1 1.4 1 2.3 2.4 2.3 3.9v2h7v-2c0-2.5-3.8-4-8-4z"/>
+      </g>
+    </defs>
+  </svg>
+
+  <header class="w-full bg-spaceCard/95 border-b border-white/10 px-4 py-3 sm:px-6 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="goToHome()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-novaViolet via-novaCyan to-novaNeon p-[2px] shadow-lg pulse-ring flex-shrink-0">
+          <div class="w-full h-full bg-spaceVoid rounded-[10px] flex items-center justify-center text-novaCyan">
+            <svg class="w-5 h-5"><use href="#icon-gamepad"/></svg>
+          </div>
+        </div>
+        <div>
+          <h1 class="font-orbitron text-lg sm:text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-novaCyan leading-none">
+            SUPERNOVA <span class="text-novaCyan">HUB</span>
+          </h1>
+          <div class="flex items-center space-x-2 mt-1">
+            <span class="w-2 h-2 rounded-full bg-novaNeon animate-ping"></span>
+            <span class="text-[10px] font-bold text-slate-400 tracking-widest font-orbitron">11 GAMES • ZERO-DRAIN CDN • INSTANT READY</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="openTutorial(selectedGame || 'gravity4')" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/15 text-slate-300 font-orbitron text-xs font-bold flex items-center space-x-1.5 arcade-btn">
+          <svg class="w-4 h-4 text-novaCyan"><use href="#icon-info"/></svg>
+          <span class="hidden sm:inline">HOW TO PLAY</span>
+        </button>
+
+        <div class="hidden md:flex items-center space-x-3 text-xs font-orbitron bg-black/40 border border-white/10 rounded-xl px-3 py-1.5">
+          <span class="text-slate-400">PLAYS: <strong id="globalPlaysCount" class="text-novaCyan font-black">0</strong></span>
+          <span class="text-slate-600">|</span>
+          <span class="text-slate-400">WINS: <strong id="globalWinsCount" class="text-novaNeon font-black">0</strong></span>
+        </div>
+
+        <button onclick="toggleAudio()" id="soundToggleBtn" class="w-10 h-10 rounded-xl cyber-panel hover:border-novaCyan/50 text-slate-300 flex items-center justify-center arcade-btn" title="Toggle Synthesizer Sound">
+          <svg id="soundIconSvg" class="w-5 h-5"><use href="#icon-audio-on"/></svg>
+        </button>
+
+        <button onclick="toggleFullscreenMode()" class="w-10 h-10 rounded-xl cyber-panel hover:border-novaCyan/50 text-slate-300 flex items-center justify-center arcade-btn" title="Toggle Fullscreen">
+          <svg id="fsIconSvg" class="w-5 h-5"><use href="#icon-expand"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="hubView" class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 sm:py-8">
+    <div class="text-center mb-7">
+      <h2 class="font-orbitron text-2xl sm:text-3xl font-black text-white tracking-wide uppercase">
+        TACTICAL GAME MATRIX
+      </h2>
+      <p class="text-slate-400 font-semibold text-xs sm:text-sm mt-1">
+        Physics Drop Simulations • Holographic Instructions • Hardware Input Shields
+      </p>
+    </div>
+
+    <!-- 11 Games Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <!-- 1: Gravity 4 -->
+      <div onclick="openSetup('gravity4')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-novaAmber/60 bg-gradient-to-br from-spaceCard to-amber-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/15 border border-novaAmber/50 text-novaAmber flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-connect4"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            PHYSICS DROP
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">GRAVITY 4</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Mechanical rack with dynamic physics drop acceleration and impact rebound. Hard click shield locks input during every fall.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-novaAmber">
+          <span>FOUR-IN-LINE</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 2: Phantom Climb -->
+      <div onclick="openSetup('phantom')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-novaViolet/60 bg-gradient-to-br from-spaceCard to-purple-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-purple-500/15 border border-novaViolet/50 text-purple-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-phantom"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">
+            FLAGSHIP ESCAPE
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">PHANTOM CLIMB</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Ascend the tower stairs ahead of the rising phantom. Alternate Left and Right foot strikes in rhythm. Double-tapping stumbles!
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-novaViolet">
+          <span>CADENCE SPRINT</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 3: Nova Chess -->
+      <div onclick="openSetup('chess')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-novaCyan/40 bg-gradient-to-br from-spaceCard to-cyan-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-novaCyan/50 text-novaCyan flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-chess"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            TACTICAL 8x8
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">NOVA CHESS</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Vector Staunton pieces with glowing legal move targets and checkmate detection. Input shield blocks taps during AI turns.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-novaCyan">
+          <span>STRATEGY MATRIX</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 4: Cyber Tic-Tac-Toe -->
+      <div onclick="openSetup('ttt')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-white/20 bg-gradient-to-br from-spaceCard to-slate-900/40">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-white/30 text-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-ttt"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-white/10 text-slate-300 border border-white/20">
+            BINARY ARENA
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">CYBER TIC-TAC-TOE</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Smooth laser-drawn vector Cross and Circle paths. Unbeatable Minimax AI algorithm on Hard difficulty with turn lock.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-white">
+          <span>RAPID DUEL</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 5: Neon Dots & Boxes -->
+      <div onclick="openSetup('dots')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-novaPink/40 bg-gradient-to-br from-spaceCard to-pink-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-pink-500/15 border border-novaPink/50 text-novaPink flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-dots"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/40">
+            GRID WAR
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">NEON DOTS & BOXES</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Laser grid connector. Enclose glowing cyber cells to score energy cores and unlock consecutive chain bonus moves.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-novaPink">
+          <span>TERRITORY WAR</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 6: Quantum Tanks -->
+      <div onclick="openSetup('tanks')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-novaNeon/50 bg-gradient-to-br from-spaceCard to-emerald-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-novaNeon/50 text-novaNeon flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-tank"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+            ARENA COMBAT
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">QUANTUM TANKS</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Micro-tank arena combat featuring bouncing ricochet laser shells, indestructible quantum barriers, and full D-Pad controls.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-novaNeon">
+          <span>COMBAT ZONE</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 7: Neon Air Hockey -->
+      <div onclick="openSetup('hockey')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-cyan-500/40 bg-gradient-to-br from-spaceCard to-cyan-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-500/50 text-novaCyan flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-puck"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            HYPER KINETIC
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">NEON AIR HOCKEY</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Real-time kinetic deflection physics, drag mallets, goal sensors, and authentic wall spark audio feedback.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-novaCyan">
+          <span>REFLEX PUCK</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 8: Cyber Reaction -->
+      <div onclick="openSetup('reaction')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-yellow-500/40 bg-gradient-to-br from-spaceCard to-amber-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-yellow-500/15 border border-yellow-500/50 text-yellow-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-bolt"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
+            MILLI-REFLEX
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">CYBER REACTION</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Split-second reflex duel. Wait for the green surge and tap instantly. False starts trigger immediate penalty points.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-yellow-400">
+          <span>SPEED TEST</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 9: Echo Matrix (Hidden Word Dot Recall) -->
+      <div onclick="openSetup('echo')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-indigo-500/40 bg-gradient-to-br from-spaceCard to-indigo-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-indigo-500/15 border border-indigo-500/50 text-indigo-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-echo"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+            SECRET DOT RECALL
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">ECHO MATRIX</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Cumulative memory duel. Sequence words are kept completely hidden! Green dots show your progress; red dots alert sequence glitches.
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-indigo-400">
+          <span>NEURAL RECALL</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 10: Cyber Snake -->
+      <div onclick="openSetup('snake')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-green-500/40 bg-gradient-to-br from-spaceCard to-green-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-green-500/15 border border-green-500/50 text-green-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-snake"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/40">
+            CLASSIC GRID
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">CYBER SNAKE</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Navigate the glowing neon worm to consume energy packets. Grow larger and avoid border walls or self-collision!
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-green-400">
+          <span>SURVIVAL</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+      <!-- 11: Pulse Dodge -->
+      <div onclick="openSetup('pulse')" class="cyber-panel nova-glow rounded-3xl p-6 cursor-pointer flex flex-col justify-between arcade-btn relative overflow-hidden group border-2 border-orange-500/40 bg-gradient-to-br from-spaceCard to-orange-950/20">
+        <div class="flex items-start justify-between">
+          <div class="w-16 h-16 rounded-2xl bg-orange-500/15 border border-orange-500/50 text-orange-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-9 h-9"><use href="#icon-pulse"/></svg>
+          </div>
+          <span class="font-orbitron text-[10px] font-black px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40">
+            EVASION
+          </span>
+        </div>
+        <div class="mt-5">
+          <h3 class="font-orbitron text-lg font-black text-white tracking-wide">PULSE DODGE</h3>
+          <p class="text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+            Pilot the micro-vessel through falling asteroid barriers. Fast twitch reflexes required as speed multiplies over time!
+          </p>
+        </div>
+        <div class="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-orbitron font-bold text-orange-400">
+          <span>BULLET HELL</span>
+          <span>LAUNCH PROTOCOL ➔</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Setup Modal -->
+  <div id="setupModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-spaceCard border border-white/20 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+      <div class="text-center mb-5">
+        <div id="modalIconContainer" class="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-novaCyan bg-white/5 border border-white/15 mb-3">
+          <svg id="modalIconSvg" class="w-8 h-8"><use href="#icon-gamepad"/></svg>
+        </div>
+        <h3 id="modalTitle" class="font-orbitron text-xl font-black text-white tracking-wide uppercase">GAME TITLE</h3>
+        <p id="modalDesc" class="text-slate-400 font-medium text-xs mt-1">Configure Mission Parameters</p>
+      </div>
+
+      <div id="standardSetupControls" class="flex flex-col space-y-2.5">
+        <button onclick="openTutorial(selectedGame)" class="w-full py-2.5 px-4 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-400/40 text-novaCyan font-orbitron font-bold text-xs tracking-wider flex items-center justify-center space-x-2 arcade-btn">
+          <svg class="w-4 h-4"><use href="#icon-info"/></svg>
+          <span>MISSION BRIEFING / HOW TO PLAY</span>
+        </button>
+
+        <button onclick="commitLaunch('pvp')" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-novaViolet via-purple-600 to-pink-600 hover:brightness-110 text-white font-orbitron font-bold text-xs tracking-wider flex items-center justify-center space-x-2 arcade-btn shadow-lg">
+          <svg class="w-4 h-4"><use href="#icon-users"/></svg>
+          <span>2 PLAYERS (LOCAL PASS & PLAY)</span>
+        </button>
+
+        <div class="p-3 bg-black/50 rounded-2xl border border-white/10">
+          <div class="text-[11px] font-orbitron font-bold text-novaCyan mb-2 uppercase tracking-wider flex items-center space-x-2">
+            <svg class="w-4 h-4"><use href="#icon-bot"/></svg>
+            <span>1 PLAYER (VS NOVA BOT)</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="commitLaunch('bot', 'easy')" class="py-2 px-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-novaNeon font-orbitron text-xs font-bold text-center border border-emerald-500/30 arcade-btn">
+              EASY
+            </button>
+            <button onclick="commitLaunch('bot', 'medium')" class="py-2 px-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 font-orbitron text-xs font-bold text-center border border-amber-500/30 arcade-btn">
+              MEDIUM
+            </button>
+            <button onclick="commitLaunch('bot', 'hard')" class="py-2 px-1 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 font-orbitron text-xs font-bold text-center border border-rose-500/30 arcade-btn">
+              HARD
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="closeSetup()" class="w-full mt-3.5 py-2 text-xs font-orbitron font-bold text-slate-500 hover:text-slate-300 transition-colors uppercase">
+        ABORT / RETURN
+      </button>
+    </div>
+  </div>
+
+  <!-- Tutorial Modal -->
+  <div id="tutorialModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl hidden flex items-center justify-center p-4">
+    <div class="bg-spaceCard border border-novaCyan/40 rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col p-6 shadow-2xl relative overflow-hidden">
+      <div class="flex items-center justify-between pb-4 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div id="tutIconBox" class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-novaCyan/50 flex items-center justify-center text-novaCyan">
+            <svg id="tutIconSvg" class="w-5 h-5"><use href="#icon-info"/></svg>
+          </div>
+          <div>
+            <h3 id="tutTitle" class="font-orbitron text-lg font-black text-white uppercase">TACTICAL BRIEFING</h3>
+            <span class="text-[10px] font-orbitron text-novaCyan">STANDARD OPERATING PROTOCOL</span>
+          </div>
+        </div>
+        <button onclick="closeTutorial()" class="w-8 h-8 rounded-lg bg-white/10 text-slate-400 hover:text-white flex items-center justify-center arcade-btn font-orbitron font-bold">
+          ✕
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto my-4 pr-1 space-y-4 text-xs font-rajdhani">
+        <div class="p-3.5 rounded-2xl bg-cyan-950/30 border border-novaCyan/30">
+          <div class="font-orbitron font-black text-novaCyan text-xs tracking-wider mb-1 uppercase flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-novaCyan"></span>
+            <span>MISSION OBJECTIVE</span>
+          </div>
+          <p id="tutObjective" class="text-slate-200 text-sm font-semibold leading-relaxed">
+            Objective description...
+          </p>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-black/50 border border-white/10">
+          <div class="font-orbitron font-black text-white text-xs tracking-wider mb-2 uppercase flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-novaNeon"></span>
+            <span>SYSTEM CONTROLS</span>
+          </div>
+          <div id="tutControls" class="space-y-2 text-slate-300 font-medium"></div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-black/50 border border-white/10">
+          <div class="font-orbitron font-black text-white text-xs tracking-wider mb-2 uppercase flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-novaViolet"></span>
+            <span>TACTICAL PROTOCOLS</span>
+          </div>
+          <ol id="tutRules" class="list-decimal list-inside space-y-1.5 text-slate-300 font-semibold leading-relaxed"></ol>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-amber-950/30 border border-amber-500/30">
+          <div class="font-orbitron font-black text-amber-400 text-xs tracking-wider mb-1.5 uppercase flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>PILOT PRO-TIPS</span>
+          </div>
+          <ul id="tutProTips" class="list-disc list-inside space-y-1 text-slate-200 font-semibold"></ul>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-white/10 flex-shrink-0">
+        <button onclick="closeTutorial()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:brightness-110 text-white font-orbitron text-xs font-bold uppercase tracking-wider arcade-btn">
+          ACKNOWLEDGE & PROCEED
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Countdown Buffer -->
+  <div id="countdownBuffer" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl hidden flex flex-col items-center justify-center p-6">
+    <div class="text-center max-w-sm w-full cyber-panel p-8 rounded-3xl border border-novaCyan/40 shadow-[0_0_60px_rgba(0,242,254,0.3)] flex flex-col items-center">
+      <div id="bufferIconBox" class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-novaCyan/50 text-novaCyan flex items-center justify-center mb-3">
+        <svg id="bufferIconSvg" class="w-8 h-8"><use href="#icon-gamepad"/></svg>
+      </div>
+
+      <h3 id="bufferGameTitle" class="font-orbitron text-xl font-black text-white tracking-widest uppercase">GAME TITLE</h3>
+      <div class="text-xs font-orbitron text-novaCyan tracking-wider mt-1" id="bufferModeText">PRE-FLIGHT CALIBRATION</div>
+
+      <div class="my-6 relative flex items-center justify-center w-32 h-32">
+        <svg class="w-full h-full transform -rotate-90">
+          <circle cx="64" cy="64" r="54" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none" />
+          <circle id="bufferCircleProgress" cx="64" cy="64" r="54" stroke="#00f2fe" stroke-width="8" stroke-dasharray="339.29" stroke-dashoffset="0" stroke-linecap="round" fill="none" class="transition-all duration-1000 ease-linear" />
+        </svg>
+        <div id="bufferNumber" class="absolute font-orbitron text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-novaCyan">
+          5
+        </div>
+      </div>
+
+      <div class="bg-black/60 border border-white/10 rounded-2xl p-3 w-full mb-6">
+        <div class="text-[10px] font-orbitron text-slate-400 font-bold mb-1 uppercase">TACTICAL BRIEFING:</div>
+        <p id="bufferInstructions" class="text-xs font-rajdhani text-slate-200 font-semibold leading-relaxed">
+          Prepare your fingers. Hard turn-locks are active to prevent mis-clicks.
+        </p>
+      </div>
+
+      <button onclick="skipBuffer()" class="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/25 text-white font-orbitron text-xs font-extrabold tracking-widest arcade-btn">
+        ⚡ SKIP WARMUP & LAUNCH
+      </button>
+    </div>
+  </div>
+
+  <!-- Fullscreen Arcade Viewport -->
+  <div id="fullscreenArcadeModal" class="fixed inset-0 z-50 bg-[#04060c] hidden flex-col justify-between overflow-hidden">
+    <header class="w-full bg-spaceCard/95 border-b border-white/10 px-4 py-3 flex items-center justify-between z-10 flex-shrink-0">
+      <div class="flex items-center space-x-3">
+        <div id="activeStageIconBox" class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-novaCyan/40 text-novaCyan flex items-center justify-center flex-shrink-0">
+          <svg id="activeStageIconSvg" class="w-5 h-5"><use href="#icon-gamepad"/></svg>
+        </div>
+        <div>
+          <h2 id="activeStageTitle" class="font-orbitron text-sm sm:text-base font-black text-white leading-tight">ACTIVE GAME</h2>
+          <span id="activeStageMode" class="text-[10px] font-orbitron text-novaCyan font-bold tracking-wider">PROTOCOL ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button onclick="openTutorial(selectedGame)" class="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-novaCyan/40 text-novaCyan font-orbitron text-xs font-bold arcade-btn flex items-center space-x-1">
+          <svg class="w-3.5 h-3.5"><use href="#icon-info"/></svg>
+          <span class="hidden sm:inline">TUTORIAL</span>
+        </button>
+
+        <button id="activeStageResetBtn" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 font-orbitron text-xs font-bold arcade-btn">
+          RESTART
+        </button>
+        <button onclick="exitFullscreenStage()" class="px-3.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-orbitron text-xs font-bold arcade-btn">
+          EXIT
+        </button>
+      </div>
+    </header>
+
+    <div id="stageViewport" class="flex-1 w-full h-full flex flex-col items-center justify-center relative p-2 sm:p-4 overflow-hidden"></div>
+  </div>
+
+  <!-- System Toast -->
+  <div id="systemToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/95 border border-novaCyan/50 text-novaCyan font-orbitron text-xs px-5 py-2.5 rounded-2xl shadow-2xl transition-all transform translate-y-24 opacity-0 pointer-events-none">
+    SYSTEM MESSAGE
+  </div>
+
+  <script>
+    class ArcadeAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      beep(freq = 600, duration = 0.05, type = 'sine', gainVal = 0.08) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      }
+      chipDropSound(fallDurationMs) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const now = this.ctx.currentTime;
+          const dur = Math.max(0.12, fallDurationMs / 1000);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + dur);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + dur);
+        } catch(e) {}
+      }
+      chipLand() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc1 = this.ctx.createOscillator();
+          const gain1 = this.ctx.createGain();
+          const now = this.ctx.currentTime;
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(120, now);
+          osc1.frequency.exponentialRampToValueAtTime(40, now + 0.12);
+          gain1.gain.setValueAtTime(0.24, now);
+          gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+          osc1.connect(gain1);
+          gain1.connect(this.ctx.destination);
+          osc1.start(now);
+          osc1.stop(now + 0.12);
+
+          const osc2 = this.ctx.createOscillator();
+          const gain2 = this.ctx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(880, now);
+          osc2.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+          gain2.gain.setValueAtTime(0.12, now);
+          gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+          osc2.connect(gain2);
+          gain2.connect(this.ctx.destination);
+          osc2.start(now);
+          osc2.stop(now + 0.08);
+        } catch(e) {}
+      }
+      step() { this.beep(340, 0.04, 'triangle', 0.06); }
+      stumble() {
+        this.beep(120, 0.18, 'sawtooth', 0.15);
+        setTimeout(() => this.beep(80, 0.15, 'sawtooth', 0.12), 40);
+      }
+      heartbeat() {
+        this.beep(55, 0.08, 'sine', 0.18);
+        setTimeout(() => this.beep(75, 0.07, 'sine', 0.14), 110);
+      }
+      tick() { this.beep(800, 0.06, 'sine', 0.07); }
+      go() {
+        this.beep(1100, 0.15, 'triangle', 0.1);
+        setTimeout(() => this.beep(1400, 0.2, 'sine', 0.09), 80);
+      }
+      drop() { this.beep(210, 0.07, 'sine', 0.1); }
+      hit() { this.beep(480, 0.05, 'triangle', 0.08); }
+      laser() {
+        this.beep(980, 0.06, 'sawtooth', 0.08);
+        setTimeout(() => this.beep(420, 0.06, 'sawtooth', 0.06), 30);
+      }
+      win() {
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          setTimeout(() => this.beep(freq, 0.14, 'sine', 0.09), idx * 85);
+        });
+      }
+    }
+    const audio = new ArcadeAudioEngine();
+
+    const tutorialsData = {
+      gravity4: {
+        title: 'GRAVITY 4',
+        icon: 'icon-connect4',
+        objective: 'Connect four of your colored energy discs horizontally, vertically, or diagonally inside the 7x6 mechanical grid.',
+        controls: [
+          '<strong>Touchscreen / Mouse:</strong> Tap or click any of the 7 column buttons to drop a disc.',
+          '<strong>Physics:</strong> Discs fall dynamically and bounce to rest into the lowest open slot.'
+        ],
+        rules: [
+          'Turns strictly alternate between Red and Gold.',
+          'Input is shielded until the falling disc completes its drop and impact bounce.',
+          'A column with 6 discs is full; tapping it is safely ignored.',
+          'Four in a row triggers an immediate victory.'
+        ],
+        proTips: [
+          'Control the center (Column 4) for the maximum number of potential win lines.',
+          'Set up double threats where two lines can be completed on your next move.'
+        ]
+      },
+      phantom: {
+        title: 'PHANTOM CLIMB',
+        icon: 'icon-phantom',
+        objective: 'Sprint up the tower stairs to safety before the rising phantom catches you from below.',
+        controls: [
+          '<strong>Touchscreen:</strong> Tap [LEFT FOOT] and [RIGHT FOOT] alternately.',
+          '<strong>Keyboard:</strong> Use A/D or Left/Right Arrow keys.'
+        ],
+        rules: [
+          'You MUST alternate footsteps with every stride: Left, Right, Left, Right.',
+          'Double-tapping the SAME foot freezes you in a stumble for 0.65 seconds.',
+          'If the phantom reaches your altitude, you are caught.',
+          'Reaching 300 meters secures the win.'
+        ],
+        proTips: [
+          'Maintain a calm, steady rhythm rather than frantic double-mashing.'
+        ]
+      },
+      chess: {
+        title: 'NOVA CHESS',
+        icon: 'icon-chess',
+        objective: 'Checkmate the enemy King or capture critical defensive pieces.',
+        controls: [
+          '<strong>Touch / Click:</strong> Tap a piece to reveal glowing legal move target indicators.',
+          '<strong>Execution:</strong> Tap any glowing target circle to execute movement.'
+        ],
+        rules: [
+          'White moves first. Board input locks immediately while Nova AI calculates.',
+          'Pawns advance and capture diagonally; Knights jump in L-shapes; Bishops diagonal; Rooks orthogonal; Queens do both.'
+        ],
+        proTips: [
+          'Control the 4 center squares early to restrict enemy maneuverability.'
+        ]
+      },
+      ttt: {
+        title: 'CYBER TIC-TAC-TOE',
+        icon: 'icon-ttt',
+        objective: 'Align three laser symbols in a row on the 3x3 binary grid.',
+        controls: ['Tap any open grid cell.'],
+        rules: [
+          'Pilot X moves first, followed by Pilot O.',
+          'Hard turn shield blocks all clicks while Nova AI makes its move.'
+        ],
+        proTips: ['Claim the center cell on turn 1 to dictate counter-play.']
+      },
+      dots: {
+        title: 'NEON DOTS & BOXES',
+        icon: 'icon-dots',
+        objective: 'Draw laser lines between adjacent nodes to complete square boxes.',
+        controls: ['Tap the gap between two neighboring dots to connect them.'],
+        rules: [
+          'Closing the 4th wall of a box claims it for 1 core and grants an immediate BONUS TURN.'
+        ],
+        proTips: ['Avoid drawing the 3rd wall of a box unless you can complete the chain.']
+      },
+      tanks: {
+        title: 'QUANTUM TANKS',
+        icon: 'icon-tank',
+        objective: 'Deplete the opponent tank hull to 0% using ricocheting laser projectiles.',
+        controls: [
+          '<strong>Controls:</strong> Use on-screen D-Pad or WASD/Arrow Keys. Tap [⚡ FIRE LASER] or Spacebar.'
+        ],
+        rules: ['Laser shells bounce off quantum perimeter barriers up to 3 times.'],
+        proTips: ['Bank laser shots off walls to hit opponents hiding behind barriers.']
+      },
+      hockey: {
+        title: 'NEON AIR HOCKEY',
+        icon: 'icon-puck',
+        objective: 'Strike the glowing plasma puck past the opponent into their goal pocket.',
+        controls: ['Drag your mallet across your half of the table.'],
+        rules: ['First to 5 goals wins.'],
+        proTips: ['Sweep forward on strike rather than holding the mallet stationary.']
+      },
+      reaction: {
+        title: 'CYBER REACTION',
+        icon: 'icon-bolt',
+        objective: 'Tap your trigger the exact instant the center beacon turns neon green.',
+        controls: ['Tap your player pad when the beacon turns green.'],
+        rules: ['Tapping early is a FALSE START penalty that awards 1 point to the opponent.'],
+        proTips: ['Focus purely on color change, not internal timing estimation.']
+      },
+      echo: {
+        title: 'ECHO MATRIX',
+        icon: 'icon-echo',
+        objective: 'Reconstruct the chronological codeword chain using secret dots before adding your new word.',
+        controls: ['Tap codewords from the holographic bank below.'],
+        rules: [
+          'Codewords are kept secret and represented only by dots (•).',
+          'Each correct step reveals a glowing green dot (🟢).',
+          'A mistake causes a red neural glitch (🔴) and ends the attempt.'
+        ],
+        proTips: ['Form a memory story connecting the codewords in order.']
+      },
+      snake: {
+        title: 'CYBER SNAKE',
+        icon: 'icon-snake',
+        objective: 'Consume energy packets to grow your neon worm without hitting walls or yourself.',
+        controls: ['Swipe or use Arrow keys/WASD to steer.'],
+        rules: ['Colliding with walls or your own tail terminates the run.'],
+        proTips: ['Use outer edges to loop around once your tail grows long.']
+      },
+      pulse: {
+        title: 'PULSE DODGE',
+        icon: 'icon-pulse',
+        objective: 'Evade falling cosmic debris for as long as possible.',
+        controls: ['Drag horizontally or use Left/Right Arrow keys.'],
+        rules: ['Contact with debris breaches your vessel.'],
+        proTips: ['Watch near the top of the arena to spot gaps ahead of time.']
+      }
+    };
+
+    let globalPlays = parseInt(localStorage.getItem('sn_plays') || '0', 10);
+    let globalWins = parseInt(localStorage.getItem('sn_wins') || '0', 10);
+
+    function syncStats() {
+      const p = document.getElementById('globalPlaysCount');
+      const w = document.getElementById('globalWinsCount');
+      if (p) p.innerText = globalPlays;
+      if (w) w.innerText = globalWins;
+    }
+    syncStats();
+
+    function incrementPlay() {
+      globalPlays++;
+      localStorage.setItem('sn_plays', globalPlays);
+      syncStats();
+    }
+    function incrementWin() {
+      globalWins++;
+      localStorage.setItem('sn_wins', globalWins);
+      syncStats();
+    }
+
+    function toggleAudio() {
+      audio.muted = !audio.muted;
+      const icon = document.getElementById('soundIconSvg');
+      if (icon) icon.innerHTML = `<use href="#icon-audio-${audio.muted ? 'mute' : 'on'}"/>`;
+      showNotification(audio.muted ? 'AUDIO MUTED' : 'AUDIO SYNTHESIZER ONLINE');
+    }
+
+    function toggleFullscreenMode() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        const icon = document.getElementById('fsIconSvg');
+        if (icon) icon.innerHTML = `<use href="#icon-compress"/>`;
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        const icon = document.getElementById('fsIconSvg');
+        if (icon) icon.innerHTML = `<use href="#icon-expand"/>`;
+      }
+    }
+
+    function showNotification(msg) {
+      const toast = document.getElementById('systemToast');
+      if (!toast) return;
+      toast.innerText = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      clearTimeout(window._nTimer);
+      window._nTimer = setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 1900);
+    }
+
+    function openTutorial(gameKey) {
+      audio.tick();
+      const tut = tutorialsData[gameKey] || tutorialsData['gravity4'];
+      document.getElementById('tutTitle').innerText = `${tut.title} BRIEFING`;
+      document.getElementById('tutIconSvg').innerHTML = `<use href="#${tut.icon}"/>`;
+      document.getElementById('tutObjective').innerText = tut.objective;
+
+      const ctrlContainer = document.getElementById('tutControls');
+      ctrlContainer.innerHTML = tut.controls.map(c => `<div>${c}</div>`).join('');
+
+      const rulesContainer = document.getElementById('tutRules');
+      rulesContainer.innerHTML = tut.rules.map(r => `<li>${r}</li>`).join('');
+
+      const tipsContainer = document.getElementById('tutProTips');
+      tipsContainer.innerHTML = tut.proTips.map(t => `<li>${t}</li>`).join('');
+
+      const modal = document.getElementById('tutorialModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeTutorial() {
+      audio.tick();
+      const modal = document.getElementById('tutorialModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    let selectedGame = 'gravity4';
+    let selectedConfig = null;
+    let bufferTimer = null;
+    let countdownVal = 5;
+    let teardownCurrentGame = null;
+
+    function openSetup(gameKey) {
+      audio.tick();
+      selectedGame = gameKey;
+      const tut = tutorialsData[gameKey] || tutorialsData['gravity4'];
+      document.getElementById('modalTitle').innerText = tut.title;
+      document.getElementById('modalDesc').innerText = tut.objective.substring(0, 75) + '...';
+      document.getElementById('modalIconSvg').innerHTML = `<use href="#${tut.icon}"/>`;
+      const modal = document.getElementById('setupModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeSetup() {
+      const modal = document.getElementById('setupModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function commitLaunch(mode, diff = 'medium') {
+      closeSetup();
+      incrementPlay();
+      selectedConfig = { mode, diff };
+      launchCountdownBuffer();
+    }
+
+    function launchCountdownBuffer() {
+      const tut = tutorialsData[selectedGame];
+      document.getElementById('bufferGameTitle').innerText = tut.title;
+      document.getElementById('bufferIconSvg').innerHTML = `<use href="#${tut.icon}"/>`;
+      document.getElementById('bufferInstructions').innerText = tut.rules[0] || 'Prepare your fingers. Hard turn-locks are active.';
+
+      const modeLabel = selectedConfig.mode === 'pvp'
+        ? 'LOCAL 2-PLAYER DUEL'
+        : `SOLO VS NOVA BOT [${selectedConfig.diff.toUpperCase()}]`;
+      document.getElementById('bufferModeText').innerText = modeLabel;
+
+      countdownVal = 5;
+      const numElem = document.getElementById('bufferNumber');
+      const circleElem = document.getElementById('bufferCircleProgress');
+      const circumference = 339.29;
+
+      numElem.innerText = countdownVal;
+      circleElem.style.strokeDashoffset = '0';
+
+      document.getElementById('countdownBuffer').classList.remove('hidden');
+      audio.tick();
+
+      clearInterval(bufferTimer);
+      bufferTimer = setInterval(() => {
+        countdownVal--;
+        const offset = circumference * (1 - countdownVal / 5);
+        circleElem.style.strokeDashoffset = offset;
+
+        if (countdownVal > 0) {
+          numElem.innerText = countdownVal;
+          audio.tick();
+        } else if (countdownVal === 0) {
+          numElem.innerText = 'GO!';
+          audio.go();
+        } else {
+          clearInterval(bufferTimer);
+          document.getElementById('countdownBuffer').classList.add('hidden');
+          mountActiveGame();
+        }
+      }, 1000);
+    }
+
+    function skipBuffer() {
+      clearInterval(bufferTimer);
+      document.getElementById('countdownBuffer').classList.add('hidden');
+      audio.go();
+      mountActiveGame();
+    }
+
+    function mountActiveGame() {
+      if (teardownCurrentGame) teardownCurrentGame();
+
+      const tut = tutorialsData[selectedGame];
+      document.getElementById('activeStageTitle').innerText = tut.title;
+      document.getElementById('activeStageIconSvg').innerHTML = `<use href="#${tut.icon}"/>`;
+
+      const modeLabel = selectedConfig.mode === 'pvp'
+        ? 'LOCAL 2-PLAYER'
+        : `SOLO VS NOVA BOT (${selectedConfig.diff.toUpperCase()})`;
+      document.getElementById('activeStageMode').innerText = modeLabel;
+
+      const viewport = document.getElementById('stageViewport');
+      viewport.innerHTML = '';
+      document.getElementById('fullscreenArcadeModal').classList.remove('hidden');
+      document.getElementById('fullscreenArcadeModal').classList.add('flex');
+
+      if (selectedGame === 'gravity4') initGravity4(viewport, selectedConfig);
+      else if (selectedGame === 'phantom') initPhantomClimb(viewport, selectedConfig);
+      else if (selectedGame === 'chess') initGrandChess(viewport, selectedConfig);
+      else if (selectedGame === 'ttt') initCyberTTT(viewport, selectedConfig);
+      else if (selectedGame === 'dots') initNeonDots(viewport, selectedConfig);
+      else if (selectedGame === 'tanks') initQuantumTanks(viewport, selectedConfig);
+      else if (selectedGame === 'hockey') initAirHockey(viewport, selectedConfig);
+      else if (selectedGame === 'reaction') initCyberReaction(viewport, selectedConfig);
+      else if (selectedGame === 'echo') initEchoMatrix(viewport, selectedConfig);
+      else if (selectedGame === 'snake') initCyberSnake(viewport, selectedConfig);
+      else if (selectedGame === 'pulse') initPulseDodge(viewport, selectedConfig);
+    }
+
+    function exitFullscreenStage() {
+      audio.tick();
+      if (teardownCurrentGame) {
+        teardownCurrentGame();
+        teardownCurrentGame = null;
+      }
+      document.getElementById('fullscreenArcadeModal').classList.add('hidden');
+      document.getElementById('fullscreenArcadeModal').classList.remove('flex');
+      document.getElementById('stageViewport').innerHTML = '';
+    }
+
+    function goToHome() {
+      exitFullscreenStage();
+      closeSetup();
+      closeTutorial();
+      document.getElementById('countdownBuffer').classList.add('hidden');
+    }
+
+    // --- GAME 1: GRAVITY 4 ---
+    function initGravity4(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-lg mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2.5 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-slate-400 font-bold">PHYSICS 7x6 RACK</span>
+            <span id="g4Banner" class="px-3.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold">
+              TURN: RED FORCE
+            </span>
+          </div>
+
+          <div class="my-auto relative p-3 sm:p-4 rounded-3xl bg-slate-950/95 border-2 border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            <div id="g4ColHeaders" class="grid grid-cols-7 gap-2 sm:gap-2.5 mb-2"></div>
+            <div id="g4Board" class="relative overflow-hidden rounded-2xl bg-slate-900/90 p-2 border border-white/10 grid grid-cols-7 gap-2 sm:gap-2.5"></div>
+          </div>
+
+          <div class="font-orbitron text-[10px] text-slate-500 text-center">
+            TAP ANY COLUMN • DISC ACCELERATES UNDER GRAVITY WITH GROUND IMPACT REBOUND
+          </div>
+        </div>
+      `;
+
+      const ROWS = 6, COLS = 7;
+      let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+      let turn = 1;
+      let active = true;
+      let isAiThinking = false;
+      let isAnimating = false;
+
+      function renderGrid() {
+        const headerContainer = document.getElementById('g4ColHeaders');
+        headerContainer.innerHTML = '';
+        for (let c = 0; c < COLS; c++) {
+          const btn = document.createElement('button');
+          btn.className = 'w-10 h-7 sm:w-12 sm:h-8 rounded-xl bg-white/5 hover:bg-novaCyan/20 text-novaCyan border border-white/10 hover:border-novaCyan/40 flex items-center justify-center arcade-btn text-xs font-black';
+          btn.innerHTML = `<span class="transform rotate-90">➔</span>`;
+          btn.onclick = () => handleColumnClick(c);
+          headerContainer.appendChild(btn);
+        }
+
+        const boardEl = document.getElementById('g4Board');
+        boardEl.innerHTML = '';
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.id = `cell-${r}-${c}`;
+            cell.className = 'w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer flex items-center justify-center relative overflow-hidden transition-colors bg-spaceVoid/90 border border-white/10';
+            const val = grid[r][c];
+            if (val === 1) {
+              cell.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-tr from-rose-600 via-rose-500 to-rose-400 border border-rose-300 shadow-[0_0_14px_rgba(244,63,94,0.7)]"></div>`;
+            } else if (val === 2) {
+              cell.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-300 border border-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.7)]"></div>`;
+            }
+            cell.onclick = () => handleColumnClick(c);
+            boardEl.appendChild(cell);
+          }
+        }
+      }
+
+      function handleColumnClick(c) {
+        if (!active || isAiThinking || isAnimating) return;
+        if (config.mode === 'bot' && turn === 2) return;
+        executeDrop(c);
+      }
+
+      function executeDrop(c) {
+        let targetR = -1;
+        for (let r = ROWS - 1; r >= 0; r--) {
+          if (grid[r][c] === 0) {
+            targetR = r;
+            break;
+          }
+        }
+        if (targetR === -1) {
+          audio.stumble();
+          return;
+        }
+
+        isAnimating = true;
+        const boardEl = document.getElementById('g4Board');
+        boardEl.classList.add('turn-locked-shield');
+
+        const slotHeight = 52;
+        const fallDistancePx = (targetR + 1) * slotHeight + 120;
+        const fallDurationMs = 280 + targetR * 70;
+
+        audio.chipDropSound(fallDurationMs);
+
+        const targetCell = document.getElementById(`cell-${targetR}-${c}`);
+        const currentTurnColor = turn === 1
+          ? 'from-rose-600 via-rose-500 to-rose-400 border-rose-300 shadow-[0_0_16px_rgba(244,63,94,0.8)]'
+          : 'from-amber-500 via-amber-400 to-amber-300 border-amber-200 shadow-[0_0_16px_rgba(245,158,11,0.8)]';
+
+        const fallingToken = document.createElement('div');
+        fallingToken.className = `w-full h-full rounded-full bg-gradient-to-tr ${currentTurnColor} border anim-disc-fall`;
+        fallingToken.style.setProperty('--fall-distance', `-${fallDistancePx}px`);
+        fallingToken.style.animationDuration = `${fallDurationMs}ms`;
+
+        targetCell.innerHTML = '';
+        targetCell.appendChild(fallingToken);
+
+        setTimeout(() => {
+          audio.chipLand();
+          grid[targetR][c] = turn;
+          isAnimating = false;
+          boardEl.classList.remove('turn-locked-shield');
+
+          const winningLine = checkVictory(targetR, c, turn);
+          if (winningLine) {
+            active = false;
+            audio.win();
+            if (turn === 1) incrementWin();
+            highlightWin(winningLine);
+            const banner = document.getElementById('g4Banner');
+            banner.innerText = `VICTORY: ${turn === 1 ? 'RED FORCE' : 'GOLD FORCE'}!`;
+            banner.className = 'px-4 py-1 rounded-full bg-emerald-500/20 text-novaNeon border border-novaNeon font-bold';
+            return;
+          }
+
+          turn = turn === 1 ? 2 : 1;
+          const banner = document.getElementById('g4Banner');
+
+          if (config.mode === 'bot' && turn === 2) {
+            isAiThinking = true;
+            boardEl.classList.add('turn-locked-shield');
+            banner.innerText = 'NOVA BOT CALCULATING DROP...';
+
+            setTimeout(() => {
+              runBotGravityDrop();
+              isAiThinking = false;
+              boardEl.classList.remove('turn-locked-shield');
+              if (active) {
+                banner.innerText = 'TURN: RED FORCE';
+                banner.className = 'px-3.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold';
+              }
+            }, 550);
+          } else {
+            banner.innerText = turn === 1 ? 'TURN: RED FORCE' : 'TURN: GOLD FORCE';
+            banner.className = turn === 1
+              ? 'px-3.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold'
+              : 'px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold';
+          }
+        }, fallDurationMs);
+      }
+
+      function checkVictory(r, c, p) {
+        const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+        for (let [dr, dc] of directions) {
+          const cells = [{ r, c }];
+          for (let step = 1; step < 4; step++) {
+            const nr = r + dr * step;
+            const nc = c + dc * step;
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && grid[nr][nc] === p) cells.push({ r: nr, c: nc });
+            else break;
+          }
+          for (let step = 1; step < 4; step++) {
+            const nr = r - dr * step;
+            const nc = c - dc * step;
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && grid[nr][nc] === p) cells.push({ r: nr, c: nc });
+            else break;
+          }
+          if (cells.length >= 4) return cells;
+        }
+        return null;
+      }
+
+      function highlightWin(cells) {
+        cells.forEach(({ r, c }) => {
+          const cellEl = document.getElementById(`cell-${r}-${c}`);
+          if (cellEl && cellEl.firstChild) {
+            cellEl.firstChild.classList.add('ring-4', 'ring-white', 'pulse-ring');
+          }
+        });
+      }
+
+      function runBotGravityDrop() {
+        if (!active) return;
+        const validCols = [];
+        for (let c = 0; c < COLS; c++) {
+          if (grid[0][c] === 0) validCols.push(c);
+        }
+        if (validCols.length === 0) return;
+
+        let chosenCol = null;
+        if (config.diff !== 'easy') {
+          for (let c of validCols) {
+            let row = -1;
+            for (let r = ROWS - 1; r >= 0; r--) if (grid[r][c] === 0) { row = r; break; }
+            grid[row][c] = 2;
+            if (checkVictory(row, c, 2)) chosenCol = c;
+            grid[row][c] = 0;
+            if (chosenCol !== null) break;
+          }
+          if (chosenCol === null) {
+            for (let c of validCols) {
+              let row = -1;
+              for (let r = ROWS - 1; r >= 0; r--) if (grid[r][c] === 0) { row = r; break; }
+              grid[row][c] = 1;
+              if (checkVictory(row, c, 1)) chosenCol = c;
+              grid[row][c] = 0;
+              if (chosenCol !== null) break;
+            }
+          }
+        }
+
+        if (chosenCol === null) {
+          if (validCols.includes(3) && Math.random() < 0.6) chosenCol = 3;
+          else chosenCol = validCols[Math.floor(Math.random() * validCols.length)];
+        }
+
+        executeDrop(chosenCol);
+      }
+
+      renderGrid();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        turn = 1;
+        active = true;
+        isAiThinking = false;
+        isAnimating = false;
+        document.getElementById('g4Banner').innerText = 'TURN: RED FORCE';
+        document.getElementById('g4Banner').className = 'px-3.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold';
+        renderGrid();
+      };
+
+      teardownCurrentGame = () => {};
+    }
+
+    // --- GAME 2: PHANTOM CLIMB ---
+    function initPhantomClimb(container, config) {
+      container.innerHTML = `
+        <div id="phantomRoot" class="w-full h-full flex flex-col justify-between max-w-xl mx-auto relative select-none">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between text-xs font-orbitron border border-white/10 z-10">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-novaCyan"></span>
+              <span class="text-slate-300">P1 ALT: <strong id="p1AltText" class="text-novaCyan font-black text-sm">0m</strong></span>
+            </div>
+            <div id="phantomWarningBanner" class="font-bold tracking-wider text-purple-400">SPRINT UPWARDS</div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full ${config.mode === 'pvp' ? 'bg-novaPink' : 'bg-purple-500'}"></span>
+              <span class="text-slate-300">${config.mode === 'pvp' ? 'P2 ALT:' : 'GHOST:'} <strong id="p2AltText" class="${config.mode === 'pvp' ? 'text-novaPink' : 'text-purple-400'} font-black text-sm">0m</strong></span>
+            </div>
+          </div>
+
+          <div class="flex-1 w-full my-2 relative flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/80">
+            <canvas id="phantomCanvas" class="w-full h-full block"></canvas>
+            <div id="stumbleAlert" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2 rounded-2xl bg-rose-600/90 border border-white text-white font-orbitron text-sm font-black hidden shadow-2xl">
+              STUMBLE FREEZE!
+            </div>
+          </div>
+
+          <div class="w-full flex-shrink-0 z-10 pb-1">
+            ${config.mode === 'pvp' ? `
+              <div class="grid grid-cols-2 gap-3 w-full">
+                <div class="p-2 rounded-2xl bg-cyan-950/40 border border-novaCyan/40 flex flex-col space-y-2">
+                  <div class="text-[10px] font-orbitron text-novaCyan font-bold text-center">PILOT 1 (A / D)</div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="p1BtnLeft" class="py-5 rounded-xl bg-cyan-500/20 border-2 border-novaCyan text-novaCyan font-orbitron text-xs font-black arcade-btn flex flex-col items-center justify-center">
+                      <span class="text-base font-black">◀ L</span>
+                      <span class="text-[9px] mt-0.5">LEFT FOOT</span>
+                    </button>
+                    <button id="p1BtnRight" class="py-5 rounded-xl bg-cyan-500/20 border-2 border-novaCyan text-novaCyan font-orbitron text-xs font-black arcade-btn flex flex-col items-center justify-center">
+                      <span class="text-base font-black">R ▶</span>
+                      <span class="text-[9px] mt-0.5">RIGHT FOOT</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="p-2 rounded-2xl bg-pink-950/40 border border-novaPink/40 flex flex-col space-y-2">
+                  <div class="text-[10px] font-orbitron text-novaPink font-bold text-center">PILOT 2 (◀ / ▶)</div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="p2BtnLeft" class="py-5 rounded-xl bg-pink-500/20 border-2 border-novaPink text-novaPink font-orbitron text-xs font-black arcade-btn flex flex-col items-center justify-center">
+                      <span class="text-base font-black">◀ L</span>
+                      <span class="text-[9px] mt-0.5">LEFT FOOT</span>
+                    </button>
+                    <button id="p2BtnRight" class="py-5 rounded-xl bg-pink-500/20 border-2 border-novaPink text-novaPink font-orbitron text-xs font-black arcade-btn flex flex-col items-center justify-center">
+                      <span class="text-base font-black">R ▶</span>
+                      <span class="text-[9px] mt-0.5">RIGHT FOOT</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ` : `
+              <div class="grid grid-cols-2 gap-3 w-full">
+                <button id="soloBtnLeft" class="py-6 sm:py-7 rounded-2xl bg-gradient-to-b from-cyan-500/25 to-cyan-700/20 border-2 border-novaCyan text-white font-orbitron text-sm sm:text-base font-black arcade-btn flex flex-col items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.2)]">
+                  <span class="text-xl sm:text-2xl text-novaCyan">◀ LEFT</span>
+                  <span class="text-[10px] sm:text-xs text-slate-300 tracking-wider mt-1">[ KEY: A / LEFT ]</span>
+                </button>
+                <button id="soloBtnRight" class="py-6 sm:py-7 rounded-2xl bg-gradient-to-b from-cyan-500/25 to-cyan-700/20 border-2 border-novaCyan text-white font-orbitron text-sm sm:text-base font-black arcade-btn flex flex-col items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.2)]">
+                  <span class="text-xl sm:text-2xl text-novaCyan">RIGHT ▶</span>
+                  <span class="text-[10px] sm:text-xs text-slate-300 tracking-wider mt-1">[ KEY: D / RIGHT ]</span>
+                </button>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+
+      const canvas = document.getElementById('phantomCanvas');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      let p1 = { alt: 10, lastFoot: null, stumbleUntil: 0, combo: 0 };
+      let p2 = { alt: 10, lastFoot: null, stumbleUntil: 0, combo: 0 };
+      let ghost = { alt: 0, speed: config.diff === 'easy' ? 0.16 : (config.diff === 'medium' ? 0.28 : 0.44) };
+      let isOver = false;
+      let animId = null;
+      let heartbeatTimer = 0;
+
+      function triggerStep(playerNum, foot) {
+        if (isOver) return;
+        const now = performance.now();
+        const p = playerNum === 1 ? p1 : p2;
+
+        if (now < p.stumbleUntil) {
+          audio.stumble();
+          return;
+        }
+
+        if (p.lastFoot === foot) {
+          audio.stumble();
+          p.stumbleUntil = now + 650;
+          p.combo = 0;
+          if (playerNum === 1) {
+            const alertEl = document.getElementById('stumbleAlert');
+            alertEl.classList.remove('hidden');
+            setTimeout(() => alertEl.classList.add('hidden'), 600);
+          }
+          return;
+        }
+
+        audio.step();
+        p.lastFoot = foot;
+        p.combo++;
+        const sprintBonus = Math.min(p.combo * 0.4, 2.5);
+        p.alt += 4.5 + sprintBonus;
+
+        if (p.alt >= 300) {
+          endGame(playerNum === 1 ? 'PILOT 1' : 'PILOT 2');
+        }
+      }
+
+      const keyHandler = (e) => {
+        if (isOver) return;
+        const k = e.key.toLowerCase();
+        if (k === 'a') triggerStep(1, 'L');
+        else if (k === 'd') triggerStep(1, 'R');
+        else if (k === 'arrowleft') triggerStep(config.mode === 'pvp' ? 2 : 1, 'L');
+        else if (k === 'arrowright') triggerStep(config.mode === 'pvp' ? 2 : 1, 'R');
+      };
+      window.addEventListener('keydown', keyHandler);
+
+      if (config.mode === 'pvp') {
+        document.getElementById('p1BtnLeft').onclick = () => triggerStep(1, 'L');
+        document.getElementById('p1BtnRight').onclick = () => triggerStep(1, 'R');
+        document.getElementById('p2BtnLeft').onclick = () => triggerStep(2, 'L');
+        document.getElementById('p2BtnRight').onclick = () => triggerStep(2, 'R');
+      } else {
+        document.getElementById('soloBtnLeft').onclick = () => triggerStep(1, 'L');
+        document.getElementById('soloBtnRight').onclick = () => triggerStep(1, 'R');
+      }
+
+      function loop() {
+        if (!isOver) {
+          ghost.alt += ghost.speed;
+          const dist = p1.alt - ghost.alt;
+          heartbeatTimer++;
+          const heartRate = Math.max(15, Math.min(80, Math.floor(dist * 2)));
+          if (heartbeatTimer % heartRate === 0) audio.heartbeat();
+
+          const banner = document.getElementById('phantomWarningBanner');
+          const root = document.getElementById('phantomRoot');
+          if (dist < 18) {
+            banner.innerText = 'DANGER: PHANTOM CLOSING IN!';
+            banner.className = 'font-bold tracking-wider text-rose-500 animate-pulse';
+            root.classList.add('red-alert');
+          } else {
+            banner.innerText = 'SPRINT UPWARDS';
+            banner.className = 'font-bold tracking-wider text-purple-400';
+            root.classList.remove('red-alert');
+          }
+
+          if (ghost.alt >= p1.alt) endGame('PHANTOM');
+          if (config.mode === 'pvp' && ghost.alt >= p2.alt) endGame('PILOT 1');
+
+          document.getElementById('p1AltText').innerText = `${Math.floor(p1.alt)}m`;
+          document.getElementById('p2AltText').innerText = config.mode === 'pvp' ? `${Math.floor(p2.alt)}m` : `${Math.floor(ghost.alt)}m`;
+        }
+
+        ctx.fillStyle = '#060711';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const w = canvas.width;
+        const h = canvas.height;
+        const cameraY = p1.alt * 10;
+        const stepHeight = 32;
+
+        for (let i = 0; i < 45; i++) {
+          const sy = h - 60 - (i * stepHeight - (cameraY % stepHeight));
+          if (sy > -50 && sy < h + 50) {
+            const isAlt = (i % 2 === 0);
+            const sx = isAlt ? w * 0.35 : w * 0.65;
+            ctx.fillStyle = '#111827';
+            ctx.strokeStyle = '#1f2937';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(sx - 70, sy, 140, 16, 6);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = isAlt ? 'rgba(0, 242, 254, 0.4)' : 'rgba(157, 78, 221, 0.4)';
+            ctx.fillRect(sx - 65, sy + 2, 130, 3);
+          }
+        }
+
+        const ghostDist = p1.alt - ghost.alt;
+        const ghostScreenY = Math.min(h + 20, (h * 0.48) + (ghostDist * 10));
+
+        const grad = ctx.createLinearGradient(0, ghostScreenY - 40, 0, h);
+        grad.addColorStop(0, 'rgba(157, 78, 221, 0)');
+        grad.addColorStop(0.3, 'rgba(112, 26, 117, 0.6)');
+        grad.addColorStop(1, 'rgba(239, 68, 68, 0.85)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, ghostScreenY - 40, w, h - (ghostScreenY - 40));
+
+        ctx.save();
+        ctx.translate(w / 2, ghostScreenY);
+        ctx.fillStyle = '#170624';
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 25;
+        ctx.beginPath();
+        ctx.arc(0, -25, 28, Math.PI, 0, false);
+        ctx.lineTo(26, 40);
+        ctx.lineTo(12, 25);
+        ctx.lineTo(0, 40);
+        ctx.lineTo(-12, 25);
+        ctx.lineTo(-26, 40);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.shadowColor = '#ff0055';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(-9, -24, 4.5, 0, Math.PI * 2);
+        ctx.arc(9, -24, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        const p1X = config.mode === 'pvp' ? w * 0.38 : w / 2;
+        ctx.translate(p1X, h * 0.46);
+        ctx.fillStyle = '#00f2fe';
+        ctx.shadowColor = '#00f2fe';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(0, -18, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-8, -6, 16, 24);
+        ctx.strokeStyle = '#00f2fe';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-5, 18);
+        ctx.lineTo(p1.lastFoot === 'L' ? -14 : -3, 34);
+        ctx.moveTo(5, 18);
+        ctx.lineTo(p1.lastFoot === 'R' ? 14 : 3, 34);
+        ctx.stroke();
+        ctx.restore();
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+
+      function endGame(winner) {
+        isOver = true;
+        const banner = document.getElementById('phantomWarningBanner');
+        if (winner === 'PHANTOM') {
+          audio.stumble();
+          banner.innerText = 'THE PHANTOM CONSUMED YOU!';
+          banner.className = 'font-bold tracking-wider text-rose-500 text-sm';
+        } else {
+          audio.win();
+          if (winner === 'PILOT 1') incrementWin();
+          banner.innerText = `${winner} REACHED SAFETY!`;
+          banner.className = 'font-bold tracking-wider text-novaNeon text-sm';
+        }
+      }
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        p1 = { alt: 10, lastFoot: null, stumbleUntil: 0, combo: 0 };
+        p2 = { alt: 10, lastFoot: null, stumbleUntil: 0, combo: 0 };
+        ghost.alt = 0;
+        isOver = false;
+        document.getElementById('phantomRoot').classList.remove('red-alert');
+      };
+
+      teardownCurrentGame = () => {
+        cancelAnimationFrame(animId);
+        window.removeEventListener('keydown', keyHandler);
+        window.removeEventListener('resize', resizeCanvas);
+      };
+    }
+
+    // --- GAME 3: NOVA CHESS ---
+    function initGrandChess(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-lg mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2.5 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-slate-400 font-bold">TACTICAL 8x8</span>
+            <span id="chessTurnBanner" class="px-3 py-1 rounded-full bg-cyan-500/20 text-novaCyan border border-novaCyan/40 font-bold">
+              TURN: WHITE FORCE
+            </span>
+          </div>
+
+          <div class="relative my-auto">
+            <div id="chessTurnShield" class="absolute inset-0 z-20 hidden items-center justify-center bg-black/40 backdrop-blur-[1px] rounded-3xl">
+              <span class="px-4 py-2 rounded-xl bg-spaceCard border border-novaCyan text-novaCyan font-orbitron text-xs font-black animate-pulse">
+                NOVA AI COMPUTING MOVE...
+              </span>
+            </div>
+            <div id="chessGridBox" class="w-72 h-72 sm:w-96 sm:h-96 grid grid-cols-8 grid-rows-8 rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl"></div>
+          </div>
+
+          <div class="font-orbitron text-[10px] text-slate-500">
+            TAP PIECE TO REVEAL LEGAL MOVES • STRICT INPUT SHIELD ACTIVE
+          </div>
+        </div>
+      `;
+
+      const pieceSymbols = {
+        'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+        'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+      };
+
+      let board = [
+        ['r','n','b','q','k','b','n','r'],
+        ['p','p','p','p','p','p','p','p'],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['P','P','P','P','P','P','P','P'],
+        ['R','N','B','Q','K','B','N','R']
+      ];
+
+      let selectedSquare = null;
+      let legalMoves = [];
+      let turn = 'white';
+      let isGameOver = false;
+      let isAiThinking = false;
+
+      function isWhite(p) { return p && p === p.toUpperCase(); }
+      function isBlack(p) { return p && p === p.toLowerCase(); }
+
+      function renderBoard() {
+        const grid = document.getElementById('chessGridBox');
+        grid.innerHTML = '';
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const sq = document.createElement('div');
+            const isLight = (r + c) % 2 === 0;
+            sq.className = `flex items-center justify-center text-3xl sm:text-4xl cursor-pointer relative select-none ${
+              isLight ? 'bg-slate-800/80' : 'bg-slate-950'
+            }`;
+
+            const piece = board[r][c];
+            if (piece) {
+              const span = document.createElement('span');
+              span.innerText = pieceSymbols[piece] || piece;
+              span.className = isWhite(piece) ? 'text-novaCyan drop-shadow-[0_0_8px_rgba(0,242,254,0.6)]' : 'text-slate-400 drop-shadow-[0_0_6px_rgba(0,0,0,0.9)]';
+              sq.appendChild(span);
+            }
+
+            if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
+              sq.classList.add('ring-4', 'ring-inset', 'ring-novaCyan');
+            }
+
+            if (legalMoves.some(m => m.r === r && m.c === c)) {
+              const dot = document.createElement('div');
+              dot.className = piece
+                ? 'absolute inset-1 rounded-full border-2 border-rose-500'
+                : 'w-3 h-3 rounded-full bg-novaNeon shadow-[0_0_8px_#00ff88]';
+              sq.appendChild(dot);
+            }
+
+            sq.onclick = () => onCellSelect(r, c);
+            grid.appendChild(sq);
+          }
+        }
+      }
+
+      function getMoves(r, c) {
+        const piece = board[r][c];
+        if (!piece) return [];
+        const isW = isWhite(piece);
+        const type = piece.toLowerCase();
+        const moves = [];
+
+        const addMove = (nr, nc) => {
+          if (nr < 0 || nr > 7 || nc < 0 || nc > 7) return false;
+          const target = board[nr][nc];
+          if (!target) { moves.push({ r: nr, c: nc }); return true; }
+          if ((isW && isBlack(target)) || (!isW && isWhite(target))) moves.push({ r: nr, c: nc });
+          return false;
+        };
+
+        if (type === 'p') {
+          const dir = isW ? -1 : 1;
+          const start = isW ? 6 : 1;
+          if (board[r + dir] && !board[r + dir][c]) {
+            moves.push({ r: r + dir, c: c });
+            if (r === start && !board[r + 2 * dir][c]) moves.push({ r: r + 2 * dir, c });
+          }
+          [-1, 1].forEach(dc => {
+            const nc = c + dc;
+            const nr = r + dir;
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr][nc]) {
+              if ((isW && isBlack(board[nr][nc])) || (!isW && isWhite(board[nr][nc]))) moves.push({ r: nr, c: nc });
+            }
+          });
+        } else if (type === 'n') {
+          [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => addMove(r + dr, c + dc));
+        } else if (type === 'b' || type === 'r' || type === 'q') {
+          const dirs = [];
+          if (type === 'b' || type === 'q') dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+          if (type === 'r' || type === 'q') dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+          dirs.forEach(([dr, dc]) => {
+            let step = 1;
+            while (addMove(r + dr * step, c + dc * step) && !board[r + dr * step][c + dc * step]) step++;
+          });
+        } else if (type === 'k') {
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              if (dr !== 0 || dc !== 0) addMove(r + dr, c + dc);
+            }
+          }
+        }
+        return moves;
+      }
+
+      function onCellSelect(r, c) {
+        if (isGameOver || isAiThinking) return;
+        if (config.mode === 'bot' && turn === 'black') return;
+
+        if (selectedSquare) {
+          const isTarget = legalMoves.find(m => m.r === r && m.c === c);
+          if (isTarget) {
+            executeMove(selectedSquare.r, selectedSquare.c, r, c);
+            selectedSquare = null;
+            legalMoves = [];
+            renderBoard();
+            return;
+          }
+        }
+
+        const piece = board[r][c];
+        const isTurnPiece = (turn === 'white' && isWhite(piece)) || (turn === 'black' && isBlack(piece));
+        if (isTurnPiece) {
+          audio.tick();
+          selectedSquare = { r, c };
+          legalMoves = getMoves(r, c);
+        } else {
+          selectedSquare = null;
+          legalMoves = [];
+        }
+        renderBoard();
+      }
+
+      function executeMove(fr, fc, tr, tc) {
+        audio.drop();
+        const piece = board[fr][fc];
+        const target = board[tr][tc];
+
+        board[tr][tc] = piece;
+        board[fr][fc] = '';
+
+        if (target && target.toLowerCase() === 'k') {
+          isGameOver = true;
+          audio.win();
+          if (turn === 'white') incrementWin();
+          document.getElementById('chessTurnBanner').innerText = `CHECKMATE: ${turn.toUpperCase()} WINS`;
+          return;
+        }
+
+        turn = turn === 'white' ? 'black' : 'white';
+        const banner = document.getElementById('chessTurnBanner');
+
+        if (config.mode === 'bot' && turn === 'black') {
+          isAiThinking = true;
+          document.getElementById('chessTurnShield').classList.remove('hidden');
+          document.getElementById('chessTurnShield').classList.add('flex');
+          banner.innerText = 'NOVA AI CALCULATING...';
+
+          setTimeout(() => {
+            runBotChess();
+            isAiThinking = false;
+            document.getElementById('chessTurnShield').classList.add('hidden');
+            document.getElementById('chessTurnShield').classList.remove('flex');
+            banner.innerText = 'TURN: WHITE FORCE';
+          }, 450);
+        } else {
+          banner.innerText = `TURN: ${turn.toUpperCase()} FORCE`;
+        }
+      }
+
+      function runBotChess() {
+        if (isGameOver) return;
+        const allMoves = [];
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            if (isBlack(board[r][c])) {
+              const moves = getMoves(r, c);
+              moves.forEach(m => allMoves.push({ fr: r, fc: c, tr: m.r, tc: m.c, cap: board[m.r][m.c] }));
+            }
+          }
+        }
+        if (allMoves.length === 0) return;
+
+        let pick = allMoves[Math.floor(Math.random() * allMoves.length)];
+        if (config.diff !== 'easy') {
+          const caps = allMoves.filter(m => m.cap);
+          if (caps.length > 0) pick = caps[Math.floor(Math.random() * caps.length)];
+        }
+        executeMove(pick.fr, pick.fc, pick.tr, pick.tc);
+        renderBoard();
+      }
+
+      renderBoard();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        board = [
+          ['r','n','b','q','k','b','n','r'],
+          ['p','p','p','p','p','p','p','p'],
+          ['','','','','','','',''],
+          ['','','','','','','',''],
+          ['','','','','','','',''],
+          ['','','','','','','',''],
+          ['P','P','P','P','P','P','P','P'],
+          ['R','N','B','Q','K','B','N','R']
+        ];
+        selectedSquare = null;
+        legalMoves = [];
+        turn = 'white';
+        isGameOver = false;
+        isAiThinking = false;
+        document.getElementById('chessTurnShield').classList.add('hidden');
+        document.getElementById('chessTurnBanner').innerText = 'TURN: WHITE FORCE';
+        renderBoard();
+      };
+
+      teardownCurrentGame = () => {};
+    }
+
+    // --- GAME 4: CYBER TIC-TAC-TOE ---
+    function initCyberTTT(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-sm mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2.5 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-slate-400 font-bold">BINARY 3x3</span>
+            <span id="tttBanner" class="px-3 py-1 rounded-full bg-cyan-500/20 text-novaCyan border border-novaCyan/40 font-bold">
+              TURN: PILOT X
+            </span>
+          </div>
+
+          <div id="tttGrid" class="my-auto w-72 h-72 sm:w-80 sm:h-80 grid grid-cols-3 gap-3 p-3 bg-black/60 border border-white/15 rounded-3xl shadow-2xl"></div>
+
+          <div class="font-orbitron text-[10px] text-slate-500">
+            ALIGN 3 NODES • HARD TURN-LOCK SHIELDS INPUT
+          </div>
+        </div>
+      `;
+
+      let board = Array(9).fill('');
+      let turn = 'X';
+      let isOver = false;
+      let isAiThinking = false;
+
+      function renderGrid() {
+        const grid = document.getElementById('tttGrid');
+        grid.innerHTML = '';
+        board.forEach((val, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'w-full h-full rounded-2xl bg-spaceCard border border-white/10 flex items-center justify-center arcade-btn transition-colors overflow-hidden';
+          if (val === 'X') {
+            btn.innerHTML = `
+              <svg class="w-12 h-12 text-novaPink drop-shadow-[0_0_12px_#ff007f]" viewBox="0 0 40 40">
+                <line x1="10" y1="10" x2="30" y2="30" stroke="currentColor" stroke-width="5" stroke-linecap="round" class="laser-stroke"/>
+                <line x1="30" y1="10" x2="10" y2="30" stroke="currentColor" stroke-width="5" stroke-linecap="round" class="laser-stroke"/>
+              </svg>
+            `;
+          } else if (val === 'O') {
+            btn.innerHTML = `
+              <svg class="w-12 h-12 text-novaCyan drop-shadow-[0_0_12px_#00f2fe]" viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="5" class="laser-stroke"/>
+              </svg>
+            `;
+          }
+          btn.onclick = () => onTileClick(i);
+          grid.appendChild(btn);
+        });
+      }
+
+      function checkWinner(b) {
+        const lines = [
+          [0,1,2],[3,4,5],[6,7,8],
+          [0,3,6],[1,4,7],[2,5,8],
+          [0,4,8],[2,4,6]
+        ];
+        for (let [a,b1,c] of lines) {
+          if (b[a] && b[a] === b[b1] && b[a] === b[c]) return b[a];
+        }
+        if (b.every(x => x !== '')) return 'TIE';
+        return null;
+      }
+
+      function onTileClick(i) {
+        if (board[i] !== '' || isOver || isAiThinking) return;
+        if (config.mode === 'bot' && turn === 'O') return;
+
+        audio.drop();
+        board[i] = turn;
+        renderGrid();
+
+        const res = checkWinner(board);
+        if (res) {
+          endTTT(res);
+          return;
+        }
+
+        turn = turn === 'X' ? 'O' : 'X';
+        const banner = document.getElementById('tttBanner');
+
+        if (config.mode === 'bot' && turn === 'O') {
+          isAiThinking = true;
+          document.getElementById('tttGrid').classList.add('turn-locked-shield');
+          banner.innerText = 'NOVA AI COMPUTING...';
+
+          setTimeout(() => {
+            botMove();
+            isAiThinking = false;
+            document.getElementById('tttGrid').classList.remove('turn-locked-shield');
+            banner.innerText = 'TURN: PILOT X';
+          }, 380);
+        } else {
+          banner.innerText = `TURN: PILOT ${turn}`;
+        }
+      }
+
+      function botMove() {
+        if (isOver) return;
+        const empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+        let chosen;
+
+        if (config.diff !== 'easy') {
+          for (let idx of empty) {
+            board[idx] = 'O';
+            if (checkWinner(board) === 'O') { chosen = idx; board[idx] = ''; break; }
+            board[idx] = '';
+          }
+          if (chosen === undefined) {
+            for (let idx of empty) {
+              board[idx] = 'X';
+              if (checkWinner(board) === 'X') { chosen = idx; board[idx] = ''; break; }
+              board[idx] = '';
+            }
+          }
+        }
+
+        if (chosen === undefined) {
+          chosen = empty[Math.floor(Math.random() * empty.length)];
+        }
+
+        audio.drop();
+        board[chosen] = 'O';
+        renderGrid();
+
+        const res = checkWinner(board);
+        if (res) endTTT(res);
+        else turn = 'X';
+      }
+
+      function endTTT(res) {
+        isOver = true;
+        const banner = document.getElementById('tttBanner');
+        if (res === 'TIE') {
+          banner.innerText = 'BINARY DRAW';
+          banner.className = 'px-3 py-1 rounded-full bg-white/10 text-slate-300 border border-white/20 font-bold';
+        } else {
+          audio.win();
+          if (res === 'X') incrementWin();
+          banner.innerText = `VICTORY: PILOT ${res}!`;
+          banner.className = 'px-3 py-1 rounded-full bg-emerald-500/20 text-novaNeon border border-novaNeon font-bold';
+        }
+      }
+
+      renderGrid();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        board = Array(9).fill('');
+        turn = 'X';
+        isOver = false;
+        isAiThinking = false;
+        document.getElementById('tttBanner').innerText = 'TURN: PILOT X';
+        document.getElementById('tttGrid').classList.remove('turn-locked-shield');
+        renderGrid();
+      };
+
+      teardownCurrentGame = () => {};
+    }
+
+    // --- GAME 5: NEON DOTS & BOXES ---
+    function initNeonDots(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-sm mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-novaCyan font-bold">P1 CORES: <strong id="dotsP1">0</strong></span>
+            <span id="dotsTurnBanner" class="text-slate-300 font-bold">TURN: PILOT 1</span>
+            <span class="text-novaPink font-bold">P2 CORES: <strong id="dotsP2">0</strong></span>
+          </div>
+
+          <div class="my-auto relative flex items-center justify-center p-3 rounded-3xl bg-black/80 border border-white/20 shadow-2xl">
+            <svg id="dotsSvg" width="280" height="280" class="block"></svg>
+          </div>
+
+          <div class="font-orbitron text-[10px] text-slate-500">
+            CONNECT NODES • CLOSE 4TH LINE TO CLAIM CORE AND REPEAT MOVE
+          </div>
+        </div>
+      `;
+
+      const N = 4;
+      const svg = document.getElementById('dotsSvg');
+      let turn = 1;
+      let p1Score = 0, p2Score = 0;
+      let hLines = Array.from({ length: N }, () => Array(N - 1).fill(0));
+      let vLines = Array.from({ length: N - 1 }, () => Array(N).fill(0));
+      let boxes = Array.from({ length: N - 1 }, () => Array(N - 1).fill(0));
+      let isAiThinking = false;
+
+      function drawBoard() {
+        svg.innerHTML = '';
+        const step = 280 / (N - 1);
+
+        for (let r = 0; r < N - 1; r++) {
+          for (let c = 0; c < N - 1; c++) {
+            if (boxes[r][c] !== 0) {
+              const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              rect.setAttribute('x', c * step + 4);
+              rect.setAttribute('y', r * step + 4);
+              rect.setAttribute('width', step - 8);
+              rect.setAttribute('height', step - 8);
+              rect.setAttribute('rx', 8);
+              rect.setAttribute('fill', boxes[r][c] === 1 ? 'rgba(0,242,254,0.3)' : 'rgba(255,0,127,0.3)');
+              svg.appendChild(rect);
+            }
+          }
+        }
+
+        for (let r = 0; r < N; r++) {
+          for (let c = 0; c < N - 1; c++) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', c * step);
+            line.setAttribute('y1', r * step);
+            line.setAttribute('x2', (c + 1) * step);
+            line.setAttribute('y2', r * step);
+            line.setAttribute('stroke', hLines[r][c] === 1 ? '#00f2fe' : (hLines[r][c] === 2 ? '#ff007f' : 'rgba(255,255,255,0.15)'));
+            line.setAttribute('stroke-width', '6');
+            line.setAttribute('stroke-linecap', 'round');
+            line.setAttribute('class', 'cursor-pointer');
+            line.onclick = () => onLineClick('h', r, c);
+            svg.appendChild(line);
+          }
+        }
+
+        for (let r = 0; r < N - 1; r++) {
+          for (let c = 0; c < N; c++) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', c * step);
+            line.setAttribute('y1', r * step);
+            line.setAttribute('x2', c * step);
+            line.setAttribute('y2', (r + 1) * step);
+            line.setAttribute('stroke', vLines[r][c] === 1 ? '#00f2fe' : (vLines[r][c] === 2 ? '#ff007f' : 'rgba(255,255,255,0.15)'));
+            line.setAttribute('stroke-width', '6');
+            line.setAttribute('stroke-linecap', 'round');
+            line.setAttribute('class', 'cursor-pointer');
+            line.onclick = () => onLineClick('v', r, c);
+            svg.appendChild(line);
+          }
+        }
+
+        for (let r = 0; r < N; r++) {
+          for (let c = 0; c < N; c++) {
+            const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            dot.setAttribute('cx', c * step);
+            dot.setAttribute('cy', r * step);
+            dot.setAttribute('r', '5');
+            dot.setAttribute('fill', '#ffffff');
+            svg.appendChild(dot);
+          }
+        }
+      }
+
+      function onLineClick(type, r, c) {
+        if (isAiThinking) return;
+        if (config.mode === 'bot' && turn === 2) return;
+        if (type === 'h' && hLines[r][c] !== 0) return;
+        if (type === 'v' && vLines[r][c] !== 0) return;
+
+        audio.drop();
+        if (type === 'h') hLines[r][c] = turn;
+        if (type === 'v') vLines[r][c] = turn;
+
+        let claimedBox = checkBoxes();
+        drawBoard();
+
+        if (claimedBox) {
+          audio.win();
+          if (p1Score + p2Score === 9) {
+            document.getElementById('dotsTurnBanner').innerText = p1Score > p2Score ? 'PILOT 1 WINS MATRIX!' : 'PILOT 2 WINS!';
+          }
+        } else {
+          turn = turn === 1 ? 2 : 1;
+          const banner = document.getElementById('dotsTurnBanner');
+          if (config.mode === 'bot' && turn === 2) {
+            isAiThinking = true;
+            banner.innerText = 'NOVA AI CALCULATING...';
+            setTimeout(() => {
+              botDotsMove();
+              isAiThinking = false;
+              banner.innerText = 'TURN: PILOT 1';
+            }, 450);
+          } else {
+            banner.innerText = `TURN: PILOT ${turn}`;
+          }
+        }
+      }
+
+      function checkBoxes() {
+        let scored = false;
+        for (let r = 0; r < N - 1; r++) {
+          for (let c = 0; c < N - 1; c++) {
+            if (boxes[r][c] === 0) {
+              if (hLines[r][c] !== 0 && hLines[r + 1][c] !== 0 && vLines[r][c] !== 0 && vLines[r][c + 1] !== 0) {
+                boxes[r][c] = turn;
+                scored = true;
+                if (turn === 1) p1Score++;
+                else p2Score++;
+              }
+            }
+          }
+        }
+        document.getElementById('dotsP1').innerText = p1Score;
+        document.getElementById('dotsP2').innerText = p2Score;
+        return scored;
+      }
+
+      function botDotsMove() {
+        const moves = [];
+        for (let r = 0; r < N; r++) for (let c = 0; c < N - 1; c++) if (hLines[r][c] === 0) moves.push({ type: 'h', r, c });
+        for (let r = 0; r < N - 1; r++) for (let c = 0; c < N; c++) if (vLines[r][c] === 0) moves.push({ type: 'v', r, c });
+        if (moves.length === 0) return;
+
+        const pick = moves[Math.floor(Math.random() * moves.length)];
+        if (pick.type === 'h') hLines[pick.r][pick.c] = 2;
+        if (pick.type === 'v') vLines[pick.r][pick.c] = 2;
+
+        const scored = checkBoxes();
+        drawBoard();
+        if (scored && p1Score + p2Score < 9) {
+          setTimeout(botDotsMove, 300);
+        } else {
+          turn = 1;
+        }
+      }
+
+      drawBoard();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        hLines = Array.from({ length: N }, () => Array(N - 1).fill(0));
+        vLines = Array.from({ length: N - 1 }, () => Array(N).fill(0));
+        boxes = Array.from({ length: N - 1 }, () => Array(N - 1).fill(0));
+        p1Score = 0; p2Score = 0; turn = 1; isAiThinking = false;
+        document.getElementById('dotsP1').innerText = '0';
+        document.getElementById('dotsP2').innerText = '0';
+        document.getElementById('dotsTurnBanner').innerText = 'TURN: PILOT 1';
+        drawBoard();
+      };
+
+      teardownCurrentGame = () => {};
+    }
+
+    // --- GAME 6: QUANTUM TANKS ---
+    function initQuantumTanks(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-lg mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-novaCyan font-bold">P1 HULL: <strong id="t1Health">100%</strong></span>
+            <span id="tankStageStatus" class="text-slate-400">ARENA ACTIVE</span>
+            <span class="text-novaPink font-bold">${config.mode === 'bot' ? 'NOVA BOT' : 'P2'}: <strong id="t2Health">100%</strong></span>
+          </div>
+
+          <div class="my-auto w-full relative flex items-center justify-center">
+            <canvas id="tankCanvas" width="340" height="340" class="bg-black/90 rounded-3xl border border-white/20 shadow-2xl block"></canvas>
+          </div>
+
+          <div class="w-full grid grid-cols-2 gap-3 pb-1">
+            <div class="grid grid-cols-3 gap-1 bg-black/40 p-2 rounded-2xl border border-white/10">
+              <div></div>
+              <button id="btnTankUp" class="py-2.5 rounded-xl bg-white/10 text-white font-black arcade-btn">▲</button>
+              <div></div>
+              <button id="btnTankLeft" class="py-2.5 rounded-xl bg-white/10 text-white font-black arcade-btn">◀</button>
+              <button id="btnTankDown" class="py-2.5 rounded-xl bg-white/10 text-white font-black arcade-btn">▼</button>
+              <button id="btnTankRight" class="py-2.5 rounded-xl bg-white/10 text-white font-black arcade-btn">▶</button>
+            </div>
+            <button id="btnTankFire" class="rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 border border-rose-400 text-white font-orbitron font-black text-sm flex items-center justify-center shadow-lg arcade-btn">
+              ⚡ FIRE LASER
+            </button>
+          </div>
+        </div>
+      `;
+
+      const canvas = document.getElementById('tankCanvas');
+      const ctx = canvas.getContext('2d');
+      let t1 = { x: 50, y: 170, angle: 0, hp: 100, color: '#00f2fe', cooldown: 0 };
+      let t2 = { x: 290, y: 170, angle: Math.PI, hp: 100, color: '#ff007f', cooldown: 0 };
+      let bullets = [];
+      let animId = null;
+      let isOver = false;
+      let keysDown = {};
+
+      const walls = [
+        { x: 140, y: 80, w: 60, h: 20 },
+        { x: 140, y: 240, w: 60, h: 20 },
+        { x: 160, y: 140, w: 20, h: 60 }
+      ];
+
+      function fireBullet(t) {
+        if (bullets.length > 8 || t.cooldown > 0) return;
+        audio.laser();
+        t.cooldown = 15;
+        bullets.push({
+          x: t.x + Math.cos(t.angle) * 16,
+          y: t.y + Math.sin(t.angle) * 16,
+          vx: Math.cos(t.angle) * 4.5,
+          vy: Math.sin(t.angle) * 4.5,
+          bounces: 0,
+          owner: t
+        });
+      }
+
+      function moveTank(t, fwd, rot) {
+        t.angle += rot;
+        const nx = t.x + Math.cos(t.angle) * fwd;
+        const ny = t.y + Math.sin(t.angle) * fwd;
+        if (nx > 14 && nx < 326 && ny > 14 && ny < 326) {
+          t.x = nx;
+          t.y = ny;
+        }
+      }
+
+      const keyHandler = (e) => { if (!isOver) keysDown[e.key.toLowerCase()] = true; };
+      const keyUpHandler = (e) => { keysDown[e.key.toLowerCase()] = false; };
+      window.addEventListener('keydown', keyHandler);
+      window.addEventListener('keyup', keyUpHandler);
+
+      document.getElementById('btnTankUp').onpointerdown = () => keysDown['btnUp'] = true;
+      document.getElementById('btnTankUp').onpointerup = () => keysDown['btnUp'] = false;
+      document.getElementById('btnTankDown').onpointerdown = () => keysDown['btnDown'] = true;
+      document.getElementById('btnTankDown').onpointerup = () => keysDown['btnDown'] = false;
+      document.getElementById('btnTankLeft').onpointerdown = () => keysDown['btnLeft'] = true;
+      document.getElementById('btnTankLeft').onpointerup = () => keysDown['btnLeft'] = false;
+      document.getElementById('btnTankRight').onpointerdown = () => keysDown['btnRight'] = true;
+      document.getElementById('btnTankRight').onpointerup = () => keysDown['btnRight'] = false;
+      document.getElementById('btnTankFire').onclick = () => fireBullet(t1);
+
+      function loop() {
+        if (!isOver) {
+          if (keysDown['w'] || keysDown['arrowup'] || keysDown['btnUp']) moveTank(t1, 3.5, 0);
+          if (keysDown['s'] || keysDown['arrowdown'] || keysDown['btnDown']) moveTank(t1, -2.5, 0);
+          if (keysDown['a'] || keysDown['arrowleft'] || keysDown['btnLeft']) moveTank(t1, 0, -0.15);
+          if (keysDown['d'] || keysDown['arrowright'] || keysDown['btnRight']) moveTank(t1, 0, 0.15);
+          if (keysDown[' '] || keysDown['enter']) fireBullet(t1);
+        }
+        if (t1.cooldown > 0) t1.cooldown--;
+        if (t2.cooldown > 0) t2.cooldown--;
+
+        ctx.fillStyle = '#050711';
+        ctx.fillRect(0, 0, 340, 340);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#00f2fe';
+        ctx.lineWidth = 1;
+        walls.forEach(w => {
+          ctx.fillRect(w.x, w.y, w.w, w.h);
+          ctx.strokeRect(w.x, w.y, w.w, w.h);
+        });
+
+        if (config.mode === 'bot' && !isOver) {
+          const dx = t1.x - t2.x;
+          const dy = t1.y - t2.y;
+          const targetAngle = Math.atan2(dy, dx);
+          t2.angle += (targetAngle - t2.angle) * 0.05;
+          if (Math.hypot(dx, dy) > 80) moveTank(t2, 1.2, 0);
+          if (Math.random() < 0.02) fireBullet(t2);
+        }
+
+        [t1, t2].forEach(t => {
+          ctx.save();
+          ctx.translate(t.x, t.y);
+          ctx.rotate(t.angle);
+          ctx.fillStyle = t.color;
+          ctx.fillRect(-12, -9, 24, 18);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, -2.5, 16, 5);
+          ctx.restore();
+        });
+
+        bullets.forEach((b, idx) => {
+          b.x += b.vx;
+          b.y += b.vy;
+
+          if (b.x < 6 || b.x > 334) { b.vx = -b.vx; b.bounces++; }
+          if (b.y < 6 || b.y > 334) { b.vy = -b.vy; b.bounces++; }
+
+          ctx.fillStyle = '#ffff00';
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          [t1, t2].forEach(target => {
+            if (target !== b.owner && Math.hypot(b.x - target.x, b.y - target.y) < 14) {
+              target.hp -= 25;
+              audio.stumble();
+              bullets.splice(idx, 1);
+              document.getElementById('t1Health').innerText = `${Math.max(0, t1.hp)}%`;
+              document.getElementById('t2Health').innerText = `${Math.max(0, t2.hp)}%`;
+
+              if (target.hp <= 0 && !isOver) {
+                isOver = true;
+                audio.win();
+                if (target === t2) incrementWin();
+                document.getElementById('tankStageStatus').innerText = target === t2 ? 'VICTORY: P1 WINS!' : 'P2 DESTROYED YOU!';
+              }
+            }
+          });
+
+          if (b.bounces > 3) bullets.splice(idx, 1);
+        });
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        t1 = { x: 50, y: 170, angle: 0, hp: 100, color: '#00f2fe', cooldown: 0 };
+        t2 = { x: 290, y: 170, angle: Math.PI, hp: 100, color: '#ff007f', cooldown: 0 };
+        bullets = [];
+        isOver = false;
+        keysDown = {};
+        document.getElementById('t1Health').innerText = '100%';
+        document.getElementById('t2Health').innerText = '100%';
+        document.getElementById('tankStageStatus').innerText = 'ARENA ACTIVE';
+      };
+
+      teardownCurrentGame = () => {
+        cancelAnimationFrame(animId);
+        window.removeEventListener('keydown', keyHandler);
+        window.removeEventListener('keyup', keyUpHandler);
+      };
+    }
+
+    // --- GAME 7: NEON AIR HOCKEY ---
+    function initAirHockey(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-sm mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-novaCyan font-bold">P1: <strong id="hScoreP1">0</strong></span>
+            <span class="text-slate-400">FIRST TO 5 GOALS</span>
+            <span class="text-novaPink font-bold">${config.mode === 'bot' ? 'BOT' : 'P2'}: <strong id="hScoreP2">0</strong></span>
+          </div>
+
+          <div class="my-auto w-full relative flex items-center justify-center">
+            <canvas id="hockeyCanvas" width="300" height="420" class="bg-black/90 rounded-3xl border border-white/20 shadow-2xl block"></canvas>
+          </div>
+
+          <div class="font-orbitron text-[10px] text-slate-500">
+            DRAG MALLETS • TOUCH DEFLECTION PHYSICS ACTIVE
+          </div>
+        </div>
+      `;
+
+      const canvas = document.getElementById('hockeyCanvas');
+      const ctx = canvas.getContext('2d');
+      let p1 = { x: 150, y: 370, r: 24, score: 0 };
+      let p2 = { x: 150, y: 50, r: 24, score: 0 };
+      let puck = { x: 150, y: 210, r: 12, vx: 3, vy: 3.5 };
+      let animId = null;
+
+      function draw() {
+        ctx.fillStyle = '#070914';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.setLineDash([6, 8]);
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#00f2fe';
+        ctx.beginPath();
+        ctx.arc(p1.x, p1.y, p1.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ff007f';
+        ctx.beginPath();
+        ctx.arc(p2.x, p2.y, p2.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(puck.x, puck.y, puck.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        puck.x += puck.vx;
+        puck.y += puck.vy;
+
+        if (puck.x - puck.r < 0 || puck.x + puck.r > canvas.width) {
+          puck.vx = -puck.vx;
+          audio.hit();
+        }
+
+        [p1, p2].forEach(p => {
+          const dist = Math.hypot(puck.x - p.x, puck.y - p.y);
+          if (dist < puck.r + p.r) {
+            audio.drop();
+            const angle = Math.atan2(puck.y - p.y, puck.x - p.x);
+            puck.vx = Math.cos(angle) * 5.5;
+            puck.vy = Math.sin(angle) * 5.5;
+          }
+        });
+
+        if (config.mode === 'bot') {
+          const diffSpeed = config.diff === 'easy' ? 2 : (config.diff === 'medium' ? 3.5 : 5);
+          if (p2.x < puck.x - 6) p2.x += diffSpeed;
+          else if (p2.x > puck.x + 6) p2.x -= diffSpeed;
+        }
+
+        if (puck.y < 0) {
+          p1.score++;
+          audio.win();
+          incrementWin();
+          document.getElementById('hScoreP1').innerText = p1.score;
+          resetPuck(1);
+        } else if (puck.y > canvas.height) {
+          p2.score++;
+          audio.stumble();
+          document.getElementById('hScoreP2').innerText = p2.score;
+          resetPuck(-1);
+        }
+
+        animId = requestAnimationFrame(draw);
+      }
+
+      function resetPuck(dir) {
+        puck.x = 150;
+        puck.y = 210;
+        puck.vx = (Math.random() - 0.5) * 4;
+        puck.vy = dir * 4;
+      }
+
+      let isDraggingP1 = false, isDraggingP2 = false;
+
+      const handleDrag = (tx, ty) => {
+        if (ty > canvas.height / 2) {
+          p1.x = Math.max(p1.r, Math.min(canvas.width - p1.r, tx));
+          p1.y = Math.max(canvas.height / 2 + p1.r, Math.min(canvas.height - p1.r, ty));
+        } else if (config.mode === 'pvp') {
+          p2.x = Math.max(p2.r, Math.min(canvas.width - p2.r, tx));
+          p2.y = Math.max(p2.r, Math.min(canvas.height / 2 - p2.r, ty));
+        }
+      };
+
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        for (let t of e.touches) {
+          const tx = (t.clientX - rect.left) * (canvas.width / rect.width);
+          const ty = (t.clientY - rect.top) * (canvas.height / rect.height);
+          handleDrag(tx, ty);
+        }
+      }, { passive: false });
+
+      canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const ty = (e.clientY - rect.top) * (canvas.height / rect.height);
+        if (ty > canvas.height / 2) isDraggingP1 = true;
+        else isDraggingP2 = true;
+      });
+      canvas.addEventListener('mousemove', (e) => {
+        if (!isDraggingP1 && !isDraggingP2) return;
+        const rect = canvas.getBoundingClientRect();
+        const tx = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const ty = (e.clientY - rect.top) * (canvas.height / rect.height);
+        if (isDraggingP1 && ty > canvas.height / 2) handleDrag(tx, ty);
+        if (isDraggingP2 && ty <= canvas.height / 2) handleDrag(tx, ty);
+      });
+      window.addEventListener('mouseup', () => { isDraggingP1 = false; isDraggingP2 = false; });
+
+      draw();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        p1.score = 0; p2.score = 0;
+        document.getElementById('hScoreP1').innerText = '0';
+        document.getElementById('hScoreP2').innerText = '0';
+        resetPuck(1);
+      };
+
+      teardownCurrentGame = () => { cancelAnimationFrame(animId); };
+    }
+
+    // --- GAME 8: CYBER REACTION ---
+    function initCyberReaction(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col justify-between max-w-sm mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-novaCyan font-bold">P1: <strong id="rScoreP1">0</strong></span>
+            <span id="reactionStatusText" class="text-slate-400">FIRST TO 3 WINS</span>
+            <span class="text-novaPink font-bold">P2: <strong id="rScoreP2">0</strong></span>
+          </div>
+
+          <div class="my-auto w-full flex-1 flex flex-col gap-3 py-2">
+            <button id="p2ReflexBtn" class="flex-1 w-full rounded-3xl bg-spaceCard border-2 border-white/20 flex flex-col items-center justify-center transform rotate-180 arcade-btn">
+              <span class="font-orbitron text-lg font-black text-white">PILOT 2 / BOT</span>
+              <span class="text-[10px] font-orbitron text-slate-400 mt-1">TAP ON GREEN</span>
+            </button>
+
+            <div id="reactionCenterBeacon" class="h-16 w-full rounded-2xl bg-black/60 border border-white/10 flex items-center justify-center">
+              <span id="beaconText" class="font-orbitron text-sm font-black text-rose-500">WAIT FOR GREEN...</span>
+            </div>
+
+            <button id="p1ReflexBtn" class="flex-1 w-full rounded-3xl bg-spaceCard border-2 border-white/20 flex flex-col items-center justify-center arcade-btn">
+              <span class="font-orbitron text-lg font-black text-white">PILOT 1</span>
+              <span class="text-[10px] font-orbitron text-slate-400 mt-1">TAP ON GREEN</span>
+            </button>
+          </div>
+
+          <div class="font-orbitron text-[10px] text-slate-500 text-center">
+            EARLY TAP = FALSE START PENALTY
+          </div>
+        </div>
+      `;
+
+      let p1 = 0, p2 = 0;
+      let state = 'waiting';
+      let greenTime = 0;
+      let timeoutId = null;
+
+      function startRound() {
+        state = 'waiting';
+        const beacon = document.getElementById('reactionCenterBeacon');
+        const bText = document.getElementById('beaconText');
+        beacon.style.backgroundColor = 'rgba(0,0,0,0.6)';
+        bText.innerText = 'WAIT FOR GREEN...';
+        bText.className = 'font-orbitron text-sm font-black text-rose-500';
+
+        const delay = 1500 + Math.random() * 3000;
+        timeoutId = setTimeout(() => {
+          state = 'green';
+          greenTime = performance.now();
+          beacon.style.backgroundColor = '#00ff88';
+          bText.innerText = '⚡ SURGE! TAP NOW!';
+          bText.className = 'font-orbitron text-sm font-black text-black';
+          audio.go();
+
+          if (config.mode === 'bot') {
+            const botDelay = config.diff === 'easy' ? 420 : (config.diff === 'medium' ? 290 : 190);
+            setTimeout(() => {
+              if (state === 'green') handleTap(2);
+            }, botDelay);
+          }
+        }, delay);
+      }
+
+      function handleTap(player) {
+        if (state === 'waiting') {
+          audio.stumble();
+          showNotification(`FALSE START: PILOT ${player} TAPPED EARLY!`);
+          if (player === 1) p2++; else p1++;
+          updateScores();
+          clearTimeout(timeoutId);
+          setTimeout(startRound, 1000);
+          return;
+        }
+
+        if (state === 'green') {
+          state = 'finished';
+          const ms = Math.floor(performance.now() - greenTime);
+          audio.win();
+          showNotification(`PILOT ${player} REACTED IN ${ms}ms!`);
+          if (player === 1) { p1++; incrementWin(); } else p2++;
+          updateScores();
+          setTimeout(startRound, 1200);
+        }
+      }
+
+      function updateScores() {
+        document.getElementById('rScoreP1').innerText = p1;
+        document.getElementById('rScoreP2').innerText = p2;
+        if (p1 >= 3 || p2 >= 3) {
+          document.getElementById('reactionStatusText').innerText = p1 >= 3 ? 'PILOT 1 VICTORIOUS!' : 'PILOT 2 WINS!';
+          clearTimeout(timeoutId);
+        }
+      }
+
+      document.getElementById('p1ReflexBtn').onclick = () => handleTap(1);
+      document.getElementById('p2ReflexBtn').onclick = () => handleTap(2);
+
+      startRound();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        p1 = 0; p2 = 0;
+        updateScores();
+        clearTimeout(timeoutId);
+        startRound();
+      };
+
+      teardownCurrentGame = () => { clearTimeout(timeoutId); };
+    }
+
+    // --- GAME 9: ECHO MATRIX (SECRET DOT RECALL) ---
+    function initEchoMatrix(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col justify-between max-w-md mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-novaCyan font-bold">CHAIN LENGTH: <strong id="echoChainLen">0</strong></span>
+            <span id="echoTurnBanner" class="text-slate-300 font-bold">PILOT 1 TURN</span>
+            <span class="text-indigo-400 font-bold">SECRET DOT RECALL</span>
+          </div>
+
+          <div class="my-auto w-full flex flex-col items-center p-5 bg-black/60 rounded-3xl border border-white/10">
+            <span class="text-[10px] font-orbitron text-slate-400 mb-3 uppercase tracking-wider">NEURAL RECALL STATUS:</span>
+            <div id="echoSequenceChips" class="flex flex-wrap gap-3 justify-center min-h-[50px] items-center">
+              <span class="text-slate-500 font-rajdhani text-sm italic">Tap first codeword to initiate sequence...</span>
+            </div>
+            <div id="echoSubHint" class="text-[11px] font-orbitron text-novaCyan mt-3">WORDS ARE HIDDEN. RECALL EACH DOT IN EXACT ORDER.</div>
+          </div>
+
+          <div class="w-full pb-2">
+            <span class="text-[10px] font-orbitron text-slate-400 mb-1.5 block text-center uppercase">CODEWORD BANK:</span>
+            <div id="echoWordBank" class="grid grid-cols-4 gap-2"></div>
+          </div>
+        </div>
+      `;
+
+      const words = [
+        'SYNAPSE', 'CYBER', 'QUANTUM', 'NEBULA',
+        'MATRIX', 'VECTOR', 'NEXUS', 'ORBIT',
+        'PULSE', 'TITAN', 'STELLAR', 'CORE'
+      ];
+
+      let chain = [];
+      let playerTurn = 1;
+      let playerStep = 0;
+      let isAiThinking = false;
+      let isGameOver = false;
+
+      function renderBank() {
+        const bankEl = document.getElementById('echoWordBank');
+        if (!bankEl) return;
+        bankEl.innerHTML = '';
+        words.forEach(w => {
+          const btn = document.createElement('button');
+          btn.className = 'py-3 rounded-xl bg-white/5 hover:bg-novaCyan/20 text-white font-orbitron text-[10px] sm:text-xs font-bold border border-white/10 hover:border-novaCyan/40 arcade-btn';
+          btn.innerText = w;
+          btn.onclick = () => onWordSelect(w);
+          bankEl.appendChild(btn);
+        });
+      }
+
+      function updateDots(isError = false) {
+        const chipsEl = document.getElementById('echoSequenceChips');
+        if (!chipsEl) return;
+
+        if (chain.length === 0) {
+          chipsEl.innerHTML = '<span class="text-slate-500 font-rajdhani text-sm italic">Tap first codeword to initiate sequence...</span>';
+        } else {
+          let html = '';
+          for (let i = 0; i < chain.length; i++) {
+            if (i < playerStep) {
+              html += `<div class="w-6 h-6 rounded-full bg-novaNeon shadow-[0_0_12px_rgba(0,255,136,0.8)] border-2 border-white flex items-center justify-center text-[10px] text-black font-black">✓</div>`;
+            } else if (isError && i === playerStep) {
+              html += `<div class="w-6 h-6 rounded-full bg-rose-500 shadow-[0_0_16px_rgba(239,68,68,1)] border-2 border-white animate-ping flex items-center justify-center text-[10px] text-white font-black">✕</div>`;
+            } else {
+              html += `<div class="w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-[10px] text-slate-400 font-bold">•</div>`;
+            }
+          }
+          if (playerStep === chain.length && !isError) {
+            html += `<div class="w-6 h-6 rounded-full bg-novaCyan shadow-[0_0_14px_rgba(0,242,254,0.9)] border-2 border-white animate-pulse flex items-center justify-center text-[10px] font-black text-black">+</div>`;
+          }
+          chipsEl.innerHTML = html;
+        }
+
+        const countEl = document.getElementById('echoChainLen');
+        if (countEl) countEl.innerText = chain.length;
+      }
+
+      function onWordSelect(w) {
+        if (isAiThinking || isGameOver) return;
+
+        if (playerStep < chain.length) {
+          if (chain[playerStep] === w) {
+            audio.step();
+            playerStep++;
+            updateDots();
+            if (playerStep === chain.length) {
+              showNotification('RECALL VERIFIED! APPEND A NEW CODEWORD.');
+            }
+          } else {
+            audio.stumble();
+            isGameOver = true;
+            updateDots(true);
+            showNotification(`NEURAL GLITCH! INCORRECT SEQUENCE.`);
+            const banner = document.getElementById('echoTurnBanner');
+            if (banner) {
+              banner.innerText = 'SEQUENCE FAILED!';
+              banner.className = 'text-rose-500 font-bold animate-pulse';
+            }
+            return;
+          }
+        } else {
+          audio.drop();
+          chain.push(w);
+          playerStep = 0;
+          updateDots();
+          showNotification(`APPENDED SECRET WORD!`);
+
+          if (config.mode === 'bot') {
+            isAiThinking = true;
+            const banner = document.getElementById('echoTurnBanner');
+            if (banner) banner.innerText = 'NOVA AI RECALLING...';
+            setTimeout(runBotEcho, 1000);
+          } else {
+            playerTurn = playerTurn === 1 ? 2 : 1;
+            const banner = document.getElementById('echoTurnBanner');
+            if (banner) banner.innerText = `PILOT ${playerTurn} RECALL TURN`;
+          }
+        }
+      }
+
+      function runBotEcho() {
+        if (isGameOver) return;
+        const diffErrorChance = config.diff === 'easy' ? 0.20 : (config.diff === 'medium' ? 0.05 : 0.00);
+
+        if (Math.random() < diffErrorChance && chain.length > 2) {
+          audio.stumble();
+          isGameOver = true;
+          playerStep = chain.length - 1;
+          updateDots(true);
+          showNotification('NOVA BOT GLITCHED! YOU WIN!');
+          const banner = document.getElementById('echoTurnBanner');
+          if (banner) {
+            banner.innerText = 'NOVA FAILED! VICTORY!';
+            banner.className = 'text-novaNeon font-bold animate-pulse';
+          }
+          incrementWin();
+          audio.win();
+          return;
+        }
+
+        const randomNewWord = words[Math.floor(Math.random() * words.length)];
+        audio.hit();
+        chain.push(randomNewWord);
+        isAiThinking = false;
+        playerStep = 0;
+        updateDots();
+        const banner = document.getElementById('echoTurnBanner');
+        if (banner) banner.innerText = 'YOUR TURN: RECALL SEQUENCE';
+        showNotification('NOVA APPENDED A SECRET DOT!');
+      }
+
+      renderBank();
+      updateDots();
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        chain = [];
+        playerStep = 0;
+        playerTurn = 1;
+        isAiThinking = false;
+        isGameOver = false;
+        const banner = document.getElementById('echoTurnBanner');
+        if (banner) {
+          banner.innerText = 'PILOT 1 TURN';
+          banner.className = 'text-slate-300 font-bold';
+        }
+        updateDots();
+      };
+
+      teardownCurrentGame = () => {};
+    }
+
+    // --- GAME 10: CYBER SNAKE ---
+    function initCyberSnake(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-sm mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-novaCyan font-bold">SCORE: <strong id="snakeScore">0</strong></span>
+            <span id="snakeStatus" class="text-slate-400 font-bold">SURVIVAL</span>
+            <span class="text-novaNeon font-bold">SPEED: <strong id="snakeSpeed">1x</strong></span>
+          </div>
+          <div class="my-auto w-full relative flex items-center justify-center p-2">
+            <canvas id="snakeCanvas" width="300" height="300" class="bg-black/90 rounded-xl border-2 border-novaCyan/40 shadow-[0_0_20px_rgba(0,242,254,0.15)] block"></canvas>
+          </div>
+          <div class="font-orbitron text-[10px] text-slate-500 mb-2">
+            SWIPE OR USE ARROW KEYS TO NAVIGATE
+          </div>
+        </div>
+      `;
+
+      const canvas = document.getElementById('snakeCanvas');
+      const ctx = canvas.getContext('2d');
+      const gridSize = 15;
+      const tileCount = canvas.width / gridSize;
+
+      let snake = [];
+      let snakeLen = 3;
+      let headX = 10, headY = 10;
+      let velX = 1, velY = 0;
+      let foodX = 15, foodY = 15;
+      let score = 0;
+      let speedMultiplier = 1;
+      let gameLoop;
+      let isOver = false;
+
+      function placeFood() {
+        foodX = Math.floor(Math.random() * tileCount);
+        foodY = Math.floor(Math.random() * tileCount);
+        for (let part of snake) {
+          if (part.x === foodX && part.y === foodY) placeFood();
+        }
+      }
+
+      function draw() {
+        if (isOver) return;
+
+        headX += velX;
+        headY += velY;
+
+        if (headX < 0 || headX >= tileCount || headY < 0 || headY >= tileCount) {
+          return gameOver();
+        }
+
+        ctx.fillStyle = '#050711';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#ff007f';
+        ctx.fillRect(foodX * gridSize, foodY * gridSize, gridSize - 1, gridSize - 1);
+
+        ctx.fillStyle = '#00ff88';
+        for (let i = 0; i < snake.length; i++) {
+          ctx.fillRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize - 1, gridSize - 1);
+          if (snake[i].x === headX && snake[i].y === headY) return gameOver();
+        }
+
+        snake.push({ x: headX, y: headY });
+        while (snake.length > snakeLen) {
+          snake.shift();
+        }
+
+        if (headX === foodX && headY === foodY) {
+          audio.step();
+          snakeLen++;
+          score += 10;
+          document.getElementById('snakeScore').innerText = score;
+          placeFood();
+
+          if (score % 50 === 0) {
+            speedMultiplier += 0.2;
+            document.getElementById('snakeSpeed').innerText = speedMultiplier.toFixed(1) + 'x';
+            clearInterval(gameLoop);
+            gameLoop = setInterval(draw, Math.max(40, 120 - (speedMultiplier * 15)));
+          }
+        }
+      }
+
+      function gameOver() {
+        isOver = true;
+        audio.stumble();
+        clearInterval(gameLoop);
+        document.getElementById('snakeStatus').innerText = 'SYSTEM FAILURE';
+        document.getElementById('snakeStatus').className = 'text-rose-500 font-black animate-pulse';
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      const keyHandler = (e) => {
+        const key = e.key;
+        if ((key === 'ArrowUp' || key === 'w') && velY !== 1) { velX = 0; velY = -1; }
+        if ((key === 'ArrowDown' || key === 's') && velY !== -1) { velX = 0; velY = 1; }
+        if ((key === 'ArrowLeft' || key === 'a') && velX !== 1) { velX = -1; velY = 0; }
+        if ((key === 'ArrowRight' || key === 'd') && velX !== -1) { velX = 1; velY = 0; }
+      };
+      window.addEventListener('keydown', keyHandler);
+
+      let touchStartX = 0, touchStartY = 0;
+      canvas.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+      canvas.addEventListener('touchend', e => {
+        let dx = e.changedTouches[0].screenX - touchStartX;
+        let dy = e.changedTouches[0].screenY - touchStartY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          if (dx > 30 && velX !== -1) { velX = 1; velY = 0; }
+          else if (dx < -30 && velX !== 1) { velX = -1; velY = 0; }
+        } else {
+          if (dy > 30 && velY !== -1) { velX = 0; velY = 1; }
+          else if (dy < -30 && velY !== 1) { velX = 0; velY = -1; }
+        }
+      }, { passive: true });
+
+      placeFood();
+      gameLoop = setInterval(draw, 120);
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        clearInterval(gameLoop);
+        snake = [];
+        snakeLen = 3;
+        headX = 10; headY = 10;
+        velX = 1; velY = 0;
+        score = 0;
+        speedMultiplier = 1;
+        isOver = false;
+        document.getElementById('snakeScore').innerText = '0';
+        document.getElementById('snakeSpeed').innerText = '1x';
+        document.getElementById('snakeStatus').innerText = 'SURVIVAL';
+        document.getElementById('snakeStatus').className = 'text-slate-400 font-bold';
+        placeFood();
+        gameLoop = setInterval(draw, 120);
+      };
+
+      teardownCurrentGame = () => {
+        clearInterval(gameLoop);
+        window.removeEventListener('keydown', keyHandler);
+      };
+    }
+
+    // --- GAME 11: PULSE DODGE ---
+    function initPulseDodge(container, config) {
+      container.innerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-between max-w-sm mx-auto py-2">
+          <div class="w-full cyber-panel rounded-2xl px-4 py-2 flex items-center justify-between font-orbitron text-xs">
+            <span class="text-novaCyan font-bold">TIME: <strong id="pulseScore">0s</strong></span>
+            <span id="pulseStatus" class="text-slate-400 font-bold">EVADING</span>
+          </div>
+          <div class="my-auto w-full relative flex items-center justify-center p-2">
+            <canvas id="pulseCanvas" width="300" height="400" class="bg-black/90 rounded-xl border border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.1)] block touch-none"></canvas>
+          </div>
+          <div class="font-orbitron text-[10px] text-slate-500 mb-2">
+            DRAG OR USE ARROW KEYS TO MOVE SHIP
+          </div>
+        </div>
+      `;
+
+      const canvas = document.getElementById('pulseCanvas');
+      const ctx = canvas.getContext('2d');
+
+      let ship = { x: 150, y: 360, w: 20, h: 20 };
+      let obstacles = [];
+      let isOver = false;
+      let score = 0;
+      let frames = 0;
+      let animId;
+      let keysDown = {};
+
+      const keyHandler = e => keysDown[e.key.toLowerCase()] = true;
+      const keyUpHandler = e => keysDown[e.key.toLowerCase()] = false;
+      window.addEventListener('keydown', keyHandler);
+      window.addEventListener('keyup', keyUpHandler);
+
+      canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const tx = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+        ship.x = Math.max(ship.w / 2, Math.min(canvas.width - ship.w / 2, tx));
+      }, { passive: false });
+
+      canvas.addEventListener('mousemove', e => {
+        if (e.buttons === 1) {
+          const rect = canvas.getBoundingClientRect();
+          const tx = (e.clientX - rect.left) * (canvas.width / rect.width);
+          ship.x = Math.max(ship.w / 2, Math.min(canvas.width - ship.w / 2, tx));
+        }
+      });
+
+      function spawnObstacle() {
+        const size = 15 + Math.random() * 25;
+        const x = Math.random() * (canvas.width - size);
+        const speed = 2 + (score / 15) + Math.random() * 2;
+        obstacles.push({ x, y: -size, w: size, h: size, speed });
+      }
+
+      function loop() {
+        if (isOver) return;
+
+        frames++;
+        if (frames % 60 === 0) {
+          score++;
+          document.getElementById('pulseScore').innerText = score + 's';
+        }
+
+        if (frames % Math.max(10, 45 - Math.floor(score / 2)) === 0) {
+          spawnObstacle();
+        }
+
+        if (keysDown['arrowleft'] || keysDown['a']) ship.x = Math.max(ship.w / 2, ship.x - 5);
+        if (keysDown['arrowright'] || keysDown['d']) ship.x = Math.min(canvas.width - ship.w / 2, ship.x + 5);
+
+        ctx.fillStyle = '#060711';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#00f2fe';
+        ctx.beginPath();
+        ctx.moveTo(ship.x, ship.y - ship.h / 2);
+        ctx.lineTo(ship.x + ship.w / 2, ship.y + ship.h / 2);
+        ctx.lineTo(ship.x - ship.w / 2, ship.y + ship.h / 2);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#f97316';
+        for (let i = 0; i < obstacles.length; i++) {
+          let obs = obstacles[i];
+          obs.y += obs.speed;
+          ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+
+          if (
+            ship.x - ship.w / 2 < obs.x + obs.w &&
+            ship.x + ship.w / 2 > obs.x &&
+            ship.y - ship.h / 2 < obs.y + obs.h &&
+            ship.y + ship.h / 2 > obs.y
+          ) {
+            isOver = true;
+            audio.stumble();
+            document.getElementById('pulseStatus').innerText = 'HULL BREACH';
+            document.getElementById('pulseStatus').className = 'text-rose-500 font-black animate-pulse';
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            incrementPlay();
+          }
+        }
+
+        obstacles = obstacles.filter(o => o.y < canvas.height + 50);
+        animId = requestAnimationFrame(loop);
+      }
+
+      animId = requestAnimationFrame(loop);
+
+      document.getElementById('activeStageResetBtn').onclick = () => {
+        cancelAnimationFrame(animId);
+        obstacles = [];
+        score = 0;
+        frames = 0;
+        ship.x = 150;
+        isOver = false;
+        document.getElementById('pulseScore').innerText = '0s';
+        document.getElementById('pulseStatus').innerText = 'EVADING';
+        document.getElementById('pulseStatus').className = 'text-slate-400 font-bold';
+        animId = requestAnimationFrame(loop);
+      };
+
+      teardownCurrentGame = () => {
+        cancelAnimationFrame(animId);
+        window.removeEventListener('keydown', keyHandler);
+        window.removeEventListener('keyup', keyUpHandler);
+      };
+    }
+  </script>
+</body>
+</html>
